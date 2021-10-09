@@ -15,27 +15,31 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 #ifndef DEBUG_H
 #define DEBUG_H
 
 #include <stdio.h>
 
-#define NULLDIE(x) if (x == NULL) { fprintf(stderr, "NULL!"); exit(1); };
+#define NULLDIE(x)                \
+    if (x == NULL) {              \
+        fprintf(stderr, "NULL!"); \
+        exit(1);                  \
+    };
 
 #ifndef NDEBUG
 
 #define debugpf(...) fprintf(stderr, __VA_ARGS__)
-#define dbgidntpf(level, ...) do {                      \
-    for (size_t ___ = 0; ___ < level; ___++) {          \
-        debugpf(" ");                                  \
-    }                                                   \
-    debugpf(__VA_ARGS__);                               \
-} while (0);
+#define dbgidntpf(level, ...)                      \
+    do {                                           \
+        for (size_t ___ = 0; ___ < level; ___++) { \
+            debugpf(" ");                          \
+        }                                          \
+        debugpf(__VA_ARGS__);                      \
+    } while (0);
 
 #else
 
-#define debugpf(fstring, ...) ;
+#define debugpf(fstring, ...)          ;
 #define dbgidntpf(level, fstring, ...) ;
 
 #endif

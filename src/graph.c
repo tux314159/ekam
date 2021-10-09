@@ -31,8 +31,10 @@ struct _visited_t {
 };
 
 static void _construct_partial(
-    const struct adjlist_t *full_adjlist, struct adjlist_t *part_adjlist,
-    struct _visited_t **visited, const size_t node
+    const struct adjlist_t *full_adjlist,
+    struct adjlist_t *      part_adjlist,
+    struct _visited_t **    visited,
+    const size_t            node
 #ifndef NDEBUG
     ,
     size_t lvl
@@ -67,7 +69,8 @@ static void _construct_partial(
     NULLDIE(
         (node_new->adj = malloc(sizeof(*node_new->adj) * node_new->conn_n)));
     memcpy(
-        node_new->adj, nodedata->adj,
+        node_new->adj,
+        nodedata->adj,
         sizeof(*node_new->adj) * node_new->conn_n);
     HASH_ADD_SIZET(part_adjlist->adjlist, id, node_new);
 
@@ -87,8 +90,10 @@ static void _construct_partial(
 }
 
 void g_construct_partial(
-    const struct adjlist_t *full_adjlist, struct adjlist_t *part_adjlist,
-    size_t updated_n, const size_t *updated)
+    const struct adjlist_t *full_adjlist,
+    struct adjlist_t *      part_adjlist,
+    size_t                  updated_n,
+    const size_t *          updated)
 {
     struct _visited_t *visited;
     struct _visited_t *i, *tmp;

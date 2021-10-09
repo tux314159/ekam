@@ -15,23 +15,21 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 #include <graph.h>
-
 #include <stdio.h>
 
 int main(void)
 {
     struct adjlist_t *al;
     struct adjlist_t *blank;
-    size_t *t;
+    size_t *          t;
 
-    al = calloc(1, sizeof(*al));
+    al    = calloc(1, sizeof(*al));
     blank = calloc(1, sizeof(*blank));
-    t = alloca(444);
-    t[0] = 1;
-    t[1] = 3;
-    t[2] = 4;
+    t     = alloca(444);
+    t[0]  = 1;
+    t[1]  = 3;
+    t[2]  = 4;
 
     for (size_t i = 0; i < 9; i++) {
         g_add_node(al, i);
