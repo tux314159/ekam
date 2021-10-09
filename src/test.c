@@ -18,8 +18,7 @@
 #include <graph.h>
 #include <stdio.h>
 
-int main(void)
-{
+int main(void) {
     struct adjlist_t *al;
     struct adjlist_t *blank;
     size_t *          t;

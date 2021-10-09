@@ -26,7 +26,7 @@
 
 struct _visited_t {
     size_t         id;
-    bool           visitedp;  // doesn't actually matter lol
+    bool           visitedp; // doesn't actually matter lol
     UT_hash_handle hh;
 };
 
@@ -39,8 +39,7 @@ static void _construct_partial(
     ,
     size_t lvl
 #endif
-)
-{
+) {
     // DFS
 
     struct _visited_t *node_visited_p, *new_visited_p;
@@ -93,8 +92,7 @@ void g_construct_partial(
     const struct adjlist_t *full_adjlist,
     struct adjlist_t *      part_adjlist,
     size_t                  updated_n,
-    const size_t *          updated)
-{
+    const size_t *          updated) {
     struct _visited_t *visited;
     struct _visited_t *i, *tmp;
 
@@ -108,8 +106,7 @@ void g_construct_partial(
 #endif
     }
 
-    HASH_ITER(hh, visited, i, tmp)
-    {
+    HASH_ITER(hh, visited, i, tmp) {
         HASH_DEL(visited, i);
         free(i);
     }
@@ -117,8 +114,7 @@ void g_construct_partial(
     return;
 }
 
-void g_add_node(struct adjlist_t *adjlist, size_t id)
-{
+void g_add_node(struct adjlist_t *adjlist, size_t id) {
     struct node_t *node;
 
     NULLDIE((node = malloc(sizeof(*node))));
@@ -132,8 +128,7 @@ void g_add_node(struct adjlist_t *adjlist, size_t id)
     return;
 }
 
-void g_add_edge(struct adjlist_t *adjlist, size_t from, size_t to)
-{
+void g_add_edge(struct adjlist_t *adjlist, size_t from, size_t to) {
     struct node_t *fromnode;
     size_t *       t;
 

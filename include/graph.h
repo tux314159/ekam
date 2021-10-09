@@ -27,17 +27,17 @@
 // DAG!
 
 struct node_t {
-    size_t         id;      // unique
-    size_t *       adj;     // must be malloc'd
-    size_t         conn_n;  // out-degree
-    struct rule_t  data;
+    size_t         id;     // unique
+    size_t *       adj;    // must be malloc'd
+    size_t         conn_n; // out-degree
+    struct rule_t  data;   // NOTE: this is NOT copied!
     UT_hash_handle hh;
 };
 
 struct adjlist_t {
     size_t         V;
     size_t         E;
-    struct node_t *adjlist;  // maps nodeid <-> node
+    struct node_t *adjlist; // maps nodeid <-> node
 };
 
 /*
