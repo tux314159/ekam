@@ -26,9 +26,9 @@ AttributeMacros:
   - __capability
 BinPackArguments: true
 BinPackParameters: true
+BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel:  false
-  AfterControlStatement: Never
   AfterEnum:       false
   AfterFunction:   true
   AfterStruct:     false
@@ -43,7 +43,6 @@ BraceWrapping:
   SplitEmptyNamespace: true
 BreakBeforeBinaryOperators: None
 BreakBeforeConceptDeclarations: true
-BreakBeforeBraces: Attach
 BreakBeforeInheritanceComma: false
 BreakInheritanceList: BeforeColon
 BreakBeforeTernaryOperators: true
@@ -150,7 +149,6 @@ RawStringFormats:
       - ParseTestProto
       - ParsePartialTestProto
     CanonicalDelimiter: ''
-    BasedOnStyle:    google
 ReflowComments:  true
 SortIncludes:    true
 SortJavaStaticImport: Before
