@@ -19,9 +19,11 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#ifndef NDEBUG
-
 #include <stdio.h>
+
+#define NULLDIE(x) if (x == NULL) { fprintf(stderr, "NULL!"); exit(1); };
+
+#ifndef NDEBUG
 
 #define debugpf(...) fprintf(stderr, __VA_ARGS__)
 #define dbgidntpf(level, ...) do {                      \

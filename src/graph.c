@@ -56,17 +56,18 @@ static void _construct_partial(
 
     dbgidntpf(lvl, "processing node %lu\n", node);
 
-    new_visited_p = malloc(sizeof(*new_visited_p));
+    NULLDIE((new_visited_p = malloc(sizeof(*new_visited_p))));
     new_visited_p->id = node;
     new_visited_p->visitedp = true;
     HASH_ADD_SIZET(*visited, id, new_visited_p);
 
     HASH_FIND_SIZET(full_adjlist->adjlist, &node, nodedata);
+    NULLDIE(nodedata);
 
     // add current node to partial graph
-    node_new = malloc(sizeof(*node_new));
+    NULLDIE((node_new = malloc(sizeof(*node_new))));
     memcpy(node_new, nodedata, sizeof(*node_new));
-    node_new->adj = malloc(sizeof(*node_new->adj) * node_new->conn_n);
+    NULLDIE((node_new->adj = malloc(sizeof(*node_new->adj) * node_new->conn_n)));
     memcpy(node_new->adj, nodedata->adj, sizeof(*node_new->adj) * node_new->conn_n);
     HASH_ADD_SIZET(part_adjlist->adjlist, id, node_new);
 
@@ -121,7 +122,7 @@ void g_add_node(struct adjlist_t *adjlist, size_t id)
 {
     struct node_t *node;
 
-    node = malloc(sizeof(*node));
+    NULLDIE((node = malloc(sizeof(*node))));
     node->adj       = malloc(0);
     node->conn_n    = 0;
     node->id        = id;
@@ -138,6 +139,7 @@ void g_add_edge(struct adjlist_t *adjlist, size_t from, size_t to)
     size_t *t;
 
     HASH_FIND_SIZET(adjlist->adjlist, &from, fromnode);
+    NULLDIE(fromnode);
     t = realloc(fromnode->adj, sizeof(*fromnode->adj) * (fromnode->conn_n + 1));
     fromnode->adj = t;
     fromnode->adj[fromnode->conn_n] = to;
