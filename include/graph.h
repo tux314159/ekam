@@ -30,7 +30,7 @@ struct node_t {
     size_t         id;     // unique
     size_t *       adj;    // must be malloc'd
     size_t         conn_n; // out-degree
-    struct rule_t  data;   // NOTE: this is NOT copied!
+    struct rule_t *data;
     UT_hash_handle hh;
 };
 
@@ -56,10 +56,15 @@ void g_construct_partial(
     const size_t *          updated);
 
 /*
+ * Given a graph, execute the whole damn thing
+ */
+void g_exec_graph(const struct adjlist_t *adjlist);
+
+/*
  * Adds an empty to a graph.
  * Assumes id is unique!
  */
-void g_add_node(struct adjlist_t *adjlist, size_t id);
+void g_add_node(struct adjlist_t *adjlist, size_t id, struct rule_t *data);
 
 /*
  * Adds an edge from from to to.

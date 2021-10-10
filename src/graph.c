@@ -22,21 +22,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <uthash.h>
 
 struct _visited_t {
     size_t         id;
-    bool           visitedp; // doesn't actually matter lol
     UT_hash_handle hh;
 };
 
-static void _construct_partial(
+// Function to iterate over a graph and also generate graph of visited nodes
+static void _iter_graph(
     const struct adjlist_t *full_adjlist,
     struct adjlist_t *      part_adjlist,
     struct _visited_t **    visited,
-    const size_t            node
+    const size_t            node,
+    void (*fn)(struct node_t *)
 #ifndef NDEBUG
-    ,
+        ,
     size_t lvl
 #endif
 )
@@ -49,43 +52,58 @@ static void _construct_partial(
     HASH_FIND_SIZET(*visited, &node, node_visited_p);
 
     if (node_visited_p) {
-        dbgidntpf(lvl, "node %lu done - skipping\n", node);
+        dbgidntpf(lvl, "node %lu done - skipping", node);
         return;
     }
 
-    dbgidntpf(lvl, "processing node %lu\n", node);
+    dbgidntpf(lvl, "processing node %lu", node);
 
     NULLDIE((new_visited_p = malloc(sizeof(*new_visited_p))));
-    new_visited_p->id       = node;
-    new_visited_p->visitedp = true;
+    new_visited_p->id = node;
     HASH_ADD_SIZET(*visited, id, new_visited_p);
 
     HASH_FIND_SIZET(full_adjlist->adjlist, &node, nodedata);
     NULLDIE(nodedata);
 
-    // add current node to partial graph
-    NULLDIE((node_new = malloc(sizeof(*node_new))));
-    memcpy(node_new, nodedata, sizeof(*node_new));
-    NULLDIE(
-        (node_new->adj = malloc(sizeof(*node_new->adj) * node_new->conn_n)));
-    memcpy(
-        node_new->adj,
-        nodedata->adj,
-        sizeof(*node_new->adj) * node_new->conn_n);
-    HASH_ADD_SIZET(part_adjlist->adjlist, id, node_new);
+    // run the function _before_ doing anything with the node
+    fn(nodedata);
 
-    part_adjlist->V += 1;
+    if (part_adjlist != NULL) {
+        // add current node to partial graph
+        NULLDIE((node_new = malloc(sizeof(*node_new))));
+        memcpy(node_new, nodedata, sizeof(*node_new));
+        NULLDIE((
+            node_new->adj = malloc(sizeof(*node_new->adj) * node_new->conn_n)));
+        memcpy(
+            node_new->adj,
+            nodedata->adj,
+            sizeof(*node_new->adj) * node_new->conn_n);
+        HASH_ADD_SIZET(part_adjlist->adjlist, id, node_new);
+
+        part_adjlist->V += 1;
+    }
+
+    // recursive fun!
     for (size_t *c = nodedata->adj; c < nodedata->adj + nodedata->conn_n; c++) {
-        dbgidntpf(lvl, "recursing into node %lu\n", *c);
-        part_adjlist->E += 1;
+        dbgidntpf(lvl, "recursing into node %lu", *c);
+        if (part_adjlist != NULL) {
+            part_adjlist->E += 1;
+        }
 #ifndef NDEBUG
-        _construct_partial(full_adjlist, part_adjlist, visited, *c, lvl + 1);
+        _iter_graph(full_adjlist, part_adjlist, visited, *c, fn, lvl + 1);
 #else
-        _construct_partial(full_adjlist, part_adjlist, visited, *c);
+        _iter_graph(full_adjlist, part_adjlist, visited, *c, fn);
 #endif
     }
 
-    dbgidntpf(lvl, "returning from node %lu\n", node);
+    dbgidntpf(lvl, "returning from node %lu", node);
+    return;
+}
+
+// we just want to construct partial
+static void _dummy(struct node_t *in)
+{
+    (void)in;
     return;
 }
 
@@ -102,10 +120,42 @@ void g_construct_partial(
 
     for (const size_t *c = updated; c < updated + updated_n; c++) {
 #ifndef NDEBUG
-        _construct_partial(full_adjlist, part_adjlist, &visited, *c, 0);
+        _iter_graph(full_adjlist, part_adjlist, &visited, *c, &_dummy, 0);
 #else
-        _construct_partial(full_adjlist, part_adjlist, &visited, *c);
+        _iter_graph(full_adjlist, part_adjlist, &visited, *c, &_dummy);
 #endif
+    }
+
+    // increment all ids in partial graph by 1 -- by creating a new one loll
+    {
+        struct node_t *c, *tmp2;
+        struct node_t *newadj;
+
+        newadj = NULL;
+        HASH_ITER(hh, part_adjlist->adjlist, c, tmp2)
+        {
+            struct node_t *new;
+
+            new = malloc(sizeof(*new));
+            NULLDIE(new);
+            memcpy(new, c, sizeof(*c));
+            for (size_t *p = new->adj; p < new->adj + new->conn_n; p++) {
+                *p += 1;
+            }
+            new->id += 1;
+
+            HASH_DEL(part_adjlist->adjlist, c);
+            free(c); // NOTE: do not free substructures; still in use by new!
+
+            HASH_ADD_SIZET(newadj, id, new);
+        }
+
+        part_adjlist->adjlist = newadj;
+    }
+    // insert dummy node 0, for easier tracking
+    g_add_node(part_adjlist, 0, NULL);
+    for (const size_t *c = updated; c < updated + updated_n; c++) {
+        g_add_edge(part_adjlist, 0, *c + 1);
     }
 
     HASH_ITER(hh, visited, i, tmp)
@@ -117,14 +167,58 @@ void g_construct_partial(
     return;
 }
 
-void g_add_node(struct adjlist_t *adjlist, size_t id)
+static void _exec_node(struct node_t *node)
+{
+    if (node->data == NULL || node->data->commands == NULL) {
+        return;
+    }
+
+    for (char **c = node->data->commands;
+         c < node->data->commands + node->data->commands_n;
+         c++) {
+        system(*c);
+    }
+    return;
+}
+
+void g_exec_graph(const struct adjlist_t *adjlist)
+{
+    struct _visited_t *visited;
+    struct _visited_t *i, *tmp;
+
+    visited = NULL;
+
+#ifndef NDEBUG
+    _iter_graph(adjlist, NULL, &visited, 0, &_exec_node, 0);
+#else
+    _iter_graph(adjlist, NULL, &visited, 0, &_exec_node);
+#endif
+
+    HASH_ITER(hh, visited, i, tmp)
+    {
+        HASH_DEL(visited, i);
+        free(i);
+    }
+
+    return;
+}
+
+void g_add_node(struct adjlist_t *adjlist, size_t id, struct rule_t *data)
 {
     struct node_t *node;
 
     NULLDIE((node = malloc(sizeof(*node))));
+    node->id     = id;
     node->adj    = malloc(0);
     node->conn_n = 0;
-    node->id     = id;
+    node->data   = malloc(sizeof(*node->data));
+    NULLDIE(node->data)
+    if (data != NULL) {
+        memcpy(node->data, data, sizeof(*data));
+    } else {
+        free(node->data);
+        node->data = NULL;
+    }
 
     adjlist->V += 1;
     HASH_ADD_SIZET(adjlist->adjlist, id, node);

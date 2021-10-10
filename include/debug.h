@@ -20,19 +20,28 @@
 
 #include <stdio.h>
 
-#define NULLDIE(x)                \
-    if (x == NULL) {              \
-        fprintf(stderr, "NULL!"); \
-        exit(1);                  \
+#define NULLDIE(x)                   \
+    if (x == NULL) {                 \
+        fprintf(                     \
+            stderr,                  \
+            "NULL @ %s in %s:%d!\n", \
+            __func__,                \
+            __FILE__,                \
+            __LINE__);               \
+        exit(1);                     \
     };
 
 #ifndef NDEBUG
 
-#define debugpf(...) fprintf(stderr, __VA_ARGS__)
+#define debugpf(...)                                                           \
+    do {                                                                       \
+        fprintf(stderr, __VA_ARGS__);                                          \
+        fprintf(stderr, "    [@%s in %s:%d]\n", __func__, __FILE__, __LINE__); \
+    } while (0);
 #define dbgidntpf(level, ...)                      \
     do {                                           \
         for (size_t ___ = 0; ___ < level; ___++) { \
-            debugpf(" ");                          \
+            fprintf(stderr, " ");                  \
         }                                          \
         debugpf(__VA_ARGS__);                      \
     } while (0);
