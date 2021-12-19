@@ -58,6 +58,6 @@
     do {                      \
         debugpf(__VA_ARGS__); \
         exit(status);         \
-    }
+    } while (0)
 
 #endif
