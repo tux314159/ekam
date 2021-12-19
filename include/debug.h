@@ -19,6 +19,7 @@
 #define DEBUG_H
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define NULLDIE(x)                   \
     if (x == NULL) {                 \
@@ -48,9 +49,15 @@
 
 #else
 
-#define debugpf(fstring, ...)          ;
-#define dbgidntpf(level, fstring, ...) ;
+#define debugpf(...)          ;
+#define dbgidntpf(level, ...) ;
 
 #endif
+
+#define die(status, ...)      \
+    do {                      \
+        debugpf(__VA_ARGS__); \
+        exit(status);         \
+    }
 
 #endif
