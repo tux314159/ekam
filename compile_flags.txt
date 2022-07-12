@@ -12,7 +12,6 @@
 -Wformat=2
 -Wmissing-declarations
 -Wmissing-include-dirs
--Wmissing-prototypes
 -Wnested-externs
 -Wpointer-arith
 -Wredundant-decls
@@ -23,6 +22,7 @@
 -Wswitch
 -Wundef
 -Wunreachable-code
--Wunused-parameter
--Wwrite-strings
+Wwrite-strings
 -Werror
+-Iinclude/graph/
+-Iinclude/util/
