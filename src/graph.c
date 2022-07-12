@@ -25,7 +25,7 @@ void graph_bfs_into(Graph src, Graph dest, size_t start)
     size_t h = 0, t = 1;
     queue[0] = start;
 
-    bool visited[MAX_NODES];
+    bool visited[MAX_NODES] = {0};
     memset(visited, false, sizeof(bool) * MAX_NODES);
     visited[start] = true;
 
