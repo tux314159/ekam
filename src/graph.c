@@ -44,3 +44,11 @@ void graph_bfs_into(Graph src, Graph dest, size_t start)
 
     return;
 }
+
+void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts)
+{
+    for (size_t i = 0; i < n_starts; i++) {
+        graph_bfs_into(src, dest, starts[i]);
+    }
+    return;
+}

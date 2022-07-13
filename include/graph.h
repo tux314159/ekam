@@ -18,5 +18,6 @@ typedef ARow* Graph;  // just an adjlist
 Graph graph_make(size_t max_nodes);
 void graph_add_edge(Graph graph, size_t from, size_t to);
 void graph_bfs_into(Graph src, Graph dest, size_t start);
+void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts);
 
 #endif
