@@ -13,7 +13,10 @@ typedef struct Node {  // probably kept in a global, indices are stored in the a
     char *fname;
 } Node;
 
-typedef ARow* Graph;  // just an adjlist
+typedef struct Graph {
+    ARow *adjlist;
+    size_t n_nodes;
+} Graph;
 
 Graph graph_make(size_t max_nodes);
 void graph_add_edge(Graph graph, size_t from, size_t to);

@@ -52,3 +52,10 @@ void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts)
     }
     return;
 }
+
+size_t *graph_toposort(Graph src, size_t *starts, size_t n_starts)
+    size_t *degrees = calloc_s(src.n_nodes, sizeof(src.adjlist));
+    size_t queue[MAX_NODES];
+    size_t h = 0, t = n_starts;
+    memcpy(queue, starts, n_starts * sizeof(*starts));
+    queue[0] = starts[0];
