@@ -5,17 +5,28 @@
 #include "graph.h"
 #include "safealloc.h"
 
-Graph graph_make(size_t max_nodes)
+Graph graph_make(void)
 {
-    return calloc_s(max_nodes, sizeof(ARow));
+    return calloc_s(MAX_NODES, sizeof(ARow));
+}
+
+void adjlist_add(struct ARow *from, size_t to) {
+    // naive linear search because yes
+    // ensure no duplicates
+    for (size_t *c = from->adj; c < from->adj + from->len; c++) {
+        if (*c == to) {
+            break;
+        }
+    }
+    from->adj = realloc_s(from->adj, sizeof(*(from->adj)) * from->len + 1);
+    from->adj[from->len] = to;
+    from->len += 1;
 }
 
 void graph_add_edge(Graph graph, size_t from, size_t to)
 {
     ARow *afrom  = graph + from;
-    afrom->adj = realloc_s(afrom->adj, sizeof(*(afrom->adj)) * afrom->len + 1);
-    afrom->adj[afrom->len] = to;
-    afrom->len += 1;
+    adjlist_add(afrom, to);
     return;
 }
 
@@ -53,9 +64,4 @@ void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts)
     return;
 }
 
-size_t *graph_toposort(Graph src, size_t *starts, size_t n_starts)
-    size_t *degrees = calloc_s(src.n_nodes, sizeof(src.adjlist));
-    size_t queue[MAX_NODES];
-    size_t h = 0, t = n_starts;
-    memcpy(queue, starts, n_starts * sizeof(*starts));
-    queue[0] = starts[0];
+

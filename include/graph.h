@@ -11,14 +11,12 @@ typedef struct ARow {  // row in adjlist
 
 typedef struct Node {  // probably kept in a global, indices are stored in the adjlist
     char *fname;
+    char *cmd;
 } Node;
 
-typedef struct Graph {
-    ARow *adjlist;
-    size_t n_nodes;
-} Graph;
+typedef ARow* Graph;
 
-Graph graph_make(size_t max_nodes);
+Graph graph_make(void);
 void graph_add_edge(Graph graph, size_t from, size_t to);
 void graph_bfs_into(Graph src, Graph dest, size_t start);
 void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts);
