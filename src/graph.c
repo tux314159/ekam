@@ -64,4 +64,10 @@ void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts)
     return;
 }
 
-
+void graph_execute(Graph g)
+{
+    // WARNING: g will be MODIFIED!
+    // TODO: parallelise
+    // TODO: implement
+    (void)g;
+}
