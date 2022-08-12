@@ -4,24 +4,29 @@
 #include <sys/types.h>
 
 #define MAX_NODES 1024
-typedef struct ARow {  // row in adjlist
+
+struct ARow {
     size_t *adj;
     size_t len;
-} ARow;
+};
 
-typedef struct Node {  // probably kept in a global array, indices are stored in the adjlist
+struct Node {  // probably kept in a global array, indices are stored in the adjlist
     char *fname;
     char *cmd;
-} Node;
+};
 
-typedef ARow* Graph;
+struct Graph {  // probably kept in a global array, indices are stored in the adjlist
+    struct ARow *graph;
+    struct Node *nodes;
+    size_t n_nodes;
+};
 
-Graph graph_make(void);
-void graph_delete(Graph g);
+struct Graph graph_make(void);
+void graph_delete(struct Graph g);
 void adjlist_add(struct ARow *from, size_t to);
-void graph_add_edge(Graph graph, size_t from, size_t to);
-void graph_bfs_into(Graph src, Graph dest, size_t start);
-void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts);
-void graph_execute(Graph g);
+void graph_add_edge(struct Graph graph, size_t from, size_t to);
+void graph_bfs_into(struct Graph src, struct Graph dest, size_t start);
+void graph_buildpartial(struct Graph src, struct Graph dest, size_t *starts, size_t n_starts);
+void graph_execute(struct Graph g);
 
 #endif

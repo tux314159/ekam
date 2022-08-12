@@ -6,21 +6,27 @@
 #include "graph.h"
 #include "safealloc.h"
 
-Graph graph_make(void)
+struct Graph graph_make(void)
 {
-    return calloc_s(MAX_NODES, sizeof(ARow));
+    return (struct Graph){
+        .graph   = calloc_s(MAX_NODES, sizeof(struct ARow)),
+        .nodes   = calloc_s(MAX_NODES, sizeof(struct Node)),
+        .n_nodes = 0,
+    };
 }
 
-void graph_delete(Graph g)
+void graph_delete(struct Graph g)
 {
     for (int i = 0; i < MAX_NODES; i++) {
-        free(g[i].adj);
+        free(g.graph[i].adj);
     }
-    free(g);
+    free(g.graph);
+    free(g.nodes);
     return;
 }
 
-void adjlist_add(struct ARow *from, size_t to) {
+void adjlist_add(struct ARow *from, size_t to)
+{
     // naive linear search because yes
     // ensure no duplicates
     for (size_t *c = from->adj; c < from->adj + from->len; c++) {
@@ -34,14 +40,14 @@ void adjlist_add(struct ARow *from, size_t to) {
     return;
 }
 
-void graph_add_edge(Graph graph, size_t from, size_t to)
+void graph_add_edge(struct Graph graph, size_t from, size_t to)
 {
-    ARow *afrom  = graph + from;
+    struct ARow *afrom = graph.graph + from;
     adjlist_add(afrom, to);
     return;
 }
 
-void graph_bfs_into(Graph src, Graph dest, size_t start)
+void graph_bfs_into(struct Graph src, struct Graph dest, size_t start)
 {
     size_t queue[MAX_NODES];
     size_t h = 0, t = 1;
@@ -53,13 +59,15 @@ void graph_bfs_into(Graph src, Graph dest, size_t start)
 
     while (h != t) {
         size_t c = queue[h];
-        h = h < MAX_NODES ? h + 1 : 0;
-        for (size_t *n = src[c].adj; n < src[c].adj + src[c].len; n++) {
+        h        = h < MAX_NODES ? h + 1 : 0;
+        for (size_t *n = src.graph[c].adj;
+             n < src.graph[c].adj + src.graph[c].len;
+             n++) {
             graph_add_edge(dest, c, *n);
             if (!visited[*n]) {
                 visited[*n] = true;
-                queue[t] = *n;
-                t = t < MAX_NODES ? t + 1 : 0;
+                queue[t]    = *n;
+                t           = t < MAX_NODES ? t + 1 : 0;
             }
         }
     }
@@ -67,7 +75,11 @@ void graph_bfs_into(Graph src, Graph dest, size_t start)
     return;
 }
 
-void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts)
+void graph_buildpartial(
+    struct Graph src,
+    struct Graph dest,
+    size_t      *starts,
+    size_t       n_starts)
 {
     for (size_t i = 0; i < n_starts; i++) {
         graph_bfs_into(src, dest, starts[i]);
@@ -75,7 +87,7 @@ void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts)
     return;
 }
 
-void graph_execute(Graph g)
+void graph_execute(struct Graph g)
 {
     // TODO: parallelise
 
@@ -89,12 +101,13 @@ void graph_execute(Graph g)
 
     while (h != t) {
         size_t c = queue[h];
-        h = h < MAX_NODES ? h + 1 : 0;
-        for (size_t *n = g[c].adj; n < g[c].adj + g[c].len; n++) {
+        h        = h < MAX_NODES ? h + 1 : 0;
+        for (size_t *n = g.graph[c].adj; n < g.graph[c].adj + g.graph[c].len;
+             n++) {
             if (!visited[*n]) {
                 visited[*n] = true;
-                queue[t] = *n;
-                t = t < MAX_NODES ? t + 1 : 0;
+                queue[t]    = *n;
+                t           = t < MAX_NODES ? t + 1 : 0;
             }
         }
     }

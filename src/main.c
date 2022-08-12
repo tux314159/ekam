@@ -3,7 +3,7 @@
 
 int main(void)
 {
-    Graph g = graph_make();
+    struct Graph g = graph_make();
     graph_add_edge(g, 0, 1);
     graph_add_edge(g, 0, 2);
     graph_add_edge(g, 1, 3);
