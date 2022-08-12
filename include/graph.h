@@ -15,7 +15,7 @@ struct Node {  // probably kept in a global array, indices are stored in the adj
     char *cmd;
 };
 
-struct Graph {  // probably kept in a global array, indices are stored in the adjlist
+struct Graph {
     struct ARow *graph;
     struct Node *nodes;
     size_t n_nodes;
