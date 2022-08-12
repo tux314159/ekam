@@ -10,7 +10,7 @@ struct ARow {
     size_t len;
 };
 
-struct Node {  // probably kept in a global array, indices are stored in the adjlist
+struct Node {
     char *fname;
     char *cmd;
 };

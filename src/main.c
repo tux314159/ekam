@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include "graph.h"
 
+
+
 int main(void)
 {
     struct Graph g = graph_make();
