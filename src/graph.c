@@ -77,9 +77,7 @@ void graph_buildpartial(Graph src, Graph dest, size_t *starts, size_t n_starts)
 
 void graph_execute(Graph g)
 {
-    // WARNING: g will be MODIFIED!
     // TODO: parallelise
-    // TODO: implement
 
     size_t queue[MAX_NODES];
     size_t h = 0, t = 1;
