@@ -17,6 +17,7 @@ typedef struct Node {  // probably kept in a global array, indices are stored in
 typedef ARow* Graph;
 
 Graph graph_make(void);
+void graph_delete(Graph g);
 void adjlist_add(struct ARow *from, size_t to);
 void graph_add_edge(Graph graph, size_t from, size_t to);
 void graph_bfs_into(Graph src, Graph dest, size_t start);

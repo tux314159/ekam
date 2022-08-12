@@ -11,5 +11,6 @@ int main(void)
     graph_add_edge(g, 4, 5);
     graph_add_edge(g, 2, 5);
     graph_execute(g);
+    graph_delete(g);
     return 0;
 }

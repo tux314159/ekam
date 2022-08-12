@@ -11,6 +11,15 @@ Graph graph_make(void)
     return calloc_s(MAX_NODES, sizeof(ARow));
 }
 
+void graph_delete(Graph g)
+{
+    for (int i = 0; i < MAX_NODES; i++) {
+        free(g[i].adj);
+    }
+    free(g);
+    return;
+}
+
 void adjlist_add(struct ARow *from, size_t to) {
     // naive linear search because yes
     // ensure no duplicates
@@ -19,7 +28,7 @@ void adjlist_add(struct ARow *from, size_t to) {
             return;
         }
     }
-    from->adj = realloc_s(from->adj, sizeof(*(from->adj)) * from->len + 1);
+    from->adj = realloc_s(from->adj, sizeof(*(from->adj)) * (from->len + 1));
     from->adj[from->len] = to;
     from->len += 1;
     return;
