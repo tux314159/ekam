@@ -1,7 +1,12 @@
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 #include "graph.h"
 #include "safealloc.h"
@@ -10,16 +15,19 @@ struct Graph graph_make(void)
 {
     return (struct Graph){
         .graph   = calloc_s(MAX_NODES, sizeof(struct Node)),
+        .rgraph  = calloc_s(MAX_NODES, sizeof(struct Node)),
         .n_nodes = 0,
     };
 }
 
-void graph_delete(struct Graph g)
+void graph_delete(struct Graph *g)
 {
     for (int i = 0; i < MAX_NODES; i++) {
-        free(g.graph[i].adj);
+        free(g->graph[i].adj);
+        free(g->rgraph[i].adj);
     }
-    free(g.graph);
+    free(g->graph);
+    free(g->rgraph);
     return;
 }
 
@@ -38,22 +46,25 @@ void adjlist_add(struct Node *from, size_t to)
     return;
 }
 
-void graph_add_edge(struct Graph graph, size_t from, size_t to)
+void graph_add_edge(struct Graph *g, size_t from, size_t to)
 {
-    struct Node *afrom = graph.graph + from;
+    struct Node *afrom  = g->graph + from;
+    struct Node *rafrom = g->rgraph + to;
     adjlist_add(afrom, to);
+    adjlist_add(rafrom, from);
+    g->n_nodes++;
     return;
 }
 
-void graph_add_rule(struct Graph graph, size_t at, const char *cmd)
+void graph_add_rule(struct Graph *g, size_t at, const char *cmd)
 {
-    struct Node *afrom = graph.graph + at;
-    afrom->cmd = malloc((strlen(cmd) + 1) * sizeof(char));
+    struct Node *afrom = g->graph + at;
+    afrom->cmd         = malloc((strlen(cmd) + 1) * sizeof(char));
     strcpy(afrom->cmd, cmd);
     return;
 }
 
-static void _bfs_copy(struct Graph src, struct Graph dest, size_t start)
+static void _bfs_copy(struct Graph *src, struct Graph *dest, size_t start)
 {
     size_t queue[MAX_NODES];
     size_t h = 0, t = 1;
@@ -66,10 +77,10 @@ static void _bfs_copy(struct Graph src, struct Graph dest, size_t start)
     while (h != t) {
         size_t c = queue[h];
         h        = h < MAX_NODES ? h + 1 : 0;
-        graph_add_rule(dest, c, src.graph[c].cmd);
+        graph_add_rule(dest, c, src->graph[c].cmd);
 
-        for (size_t *n = src.graph[c].adj;
-             n < src.graph[c].adj + src.graph[c].len;
+        for (size_t *n = src->graph[c].adj;
+             n < src->graph[c].adj + src->graph[c].len;
              n++) {
 
             graph_add_edge(dest, c, *n);
@@ -85,10 +96,10 @@ static void _bfs_copy(struct Graph src, struct Graph dest, size_t start)
 }
 
 void graph_buildpartial(
-    struct Graph src,
-    struct Graph dest,
-    size_t      *starts,
-    size_t       n_starts)
+    struct Graph *src,
+    struct Graph *dest,
+    size_t       *starts,
+    size_t        n_starts)
 {
     for (size_t i = 0; i < n_starts; i++) {
         _bfs_copy(src, dest, starts[i]);
@@ -96,7 +107,7 @@ void graph_buildpartial(
     return;
 }
 
-void graph_execute(struct Graph g, size_t start)
+void graph_execute(struct Graph *g, size_t start)
 {
     // TODO: parallelise
 
@@ -104,21 +115,80 @@ void graph_execute(struct Graph g, size_t start)
     size_t h = 0, t = 1;
     queue[0] = start;
 
-    bool visited[MAX_NODES];
+    bool   visited[MAX_NODES];
+    size_t tsorted[MAX_NODES];
     memset(visited, false, sizeof(bool) * MAX_NODES);
+    memset(tsorted, 0, sizeof(size_t) * MAX_NODES);
     visited[start] = true;
 
+    // toposort
+    size_t i = 0;
     while (h != t) {
         size_t c = queue[h];
-        h        = h < MAX_NODES ? h + 1 : 0;
-        system(g.graph[c].cmd);
-        for (size_t *n = g.graph[c].adj; n < g.graph[c].adj + g.graph[c].len;
+        h += h < MAX_NODES;
+
+        tsorted[i++] = c;
+
+        // enqueue dependants
+        for (size_t *n = g->graph[c].adj; n < g->graph[c].adj + g->graph[c].len;
              n++) {
             if (!visited[*n]) {
                 visited[*n] = true;
                 queue[t]    = *n;
-                t           = t < MAX_NODES ? t + 1 : 0;
+                t += t < MAX_NODES;
             }
         }
     }
+
+    // set up shm
+    const char *shm_name = "/ekam";
+    const size_t shm_sz = sizeof(int) + sizeof(int) * MAX_NODES;
+    int shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    shm_unlink(shm_name);
+    ftruncate(shm_fd, (off_t)shm_sz);
+    int *n_childs = mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    int *processed = n_childs + 1;
+    memset(processed, 0, sizeof(int) * MAX_NODES);
+
+    size_t cnt = 0;
+    for (;;) {
+        //wait(NULL); // clean up zombies
+
+        if (cnt == g->n_nodes) {
+            // processed all nodes, we are done
+            break;
+        }
+
+        for (size_t *c = tsorted; c < tsorted + g->n_nodes; c++) {
+            if (processed[*c]) {
+                continue;
+            }
+
+            if (*n_childs >= 2) {
+                break;
+            }
+
+            bool deps_sat = true;
+            for (size_t *d = g->rgraph[*c].adj;
+                 d < g->rgraph[*c].adj + g->rgraph[*c].len;
+                 d++) {
+                deps_sat &= (processed[*d] == 2);
+            }
+
+            if (deps_sat) {
+                (*n_childs)++;
+                processed[*c] = 1;
+                cnt++;
+                pid_t pid = fork();
+                if (!pid) {
+                    processed[*c] = 1;
+                    system(g->graph[*c].cmd);
+                    processed[*c] = 2;
+                    (*n_childs)--;
+                    _exit(0);
+                }
+            }
+        }
+    }
+    munmap(n_childs, shm_sz);
 }

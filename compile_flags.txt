@@ -25,3 +25,5 @@
 -Werror
 -Iinclude/
 -Iinclude/util/
+-lpthread
+-lrt
