@@ -6,10 +6,22 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "graph.h"
 #include "safealloc.h"
+
+static void msleep(long msec)
+{
+    struct timespec ts;
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    nanosleep(&ts, &ts);
+    return;
+}
 
 struct Graph graph_make(void)
 {
@@ -107,10 +119,8 @@ void graph_buildpartial(
     return;
 }
 
-void graph_execute(struct Graph *g, size_t start)
+void graph_execute(struct Graph *g, size_t start, int max_childs)
 {
-    // TODO: parallelise
-
     size_t queue[MAX_NODES];
     size_t h = 0, t = 1;
     queue[0] = start;
@@ -152,7 +162,8 @@ void graph_execute(struct Graph *g, size_t start)
 
     size_t cnt = 0;
     for (;;) {
-        //wait(NULL); // clean up zombies
+        wait(NULL); // clean up zombies
+        msleep(10);
 
         if (cnt == g->n_nodes) {
             // processed all nodes, we are done
@@ -164,7 +175,7 @@ void graph_execute(struct Graph *g, size_t start)
                 continue;
             }
 
-            if (*n_childs >= 2) {
+            if (*n_childs >= max_childs) {
                 break;
             }
 

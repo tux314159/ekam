@@ -5,13 +5,13 @@ int main(void)
 {
     struct Graph g = graph_make();
     struct Graph pg = graph_make();
-    graph_add_rule(&g, 0, "echo at 0; sleep 0.3");
-    graph_add_rule(&g, 1, "echo at 1; sleep 0.3");
-    graph_add_rule(&g, 2, "echo at 2; sleep 0.3");
-    graph_add_rule(&g, 3, "echo at 3; sleep 0.3");
-    graph_add_rule(&g, 4, "echo at 4; sleep 0.3");
-    graph_add_rule(&g, 5, "echo at 5; sleep 0.3");
-    graph_add_rule(&g, 6, "echo at 6; sleep 0.3");
+    graph_add_rule(&g, 0, "echo at 0; sleep 0.5");
+    graph_add_rule(&g, 1, "echo at 1; sleep 0.5");
+    graph_add_rule(&g, 2, "echo at 2; sleep 0.5");
+    graph_add_rule(&g, 3, "echo at 3; sleep 0.5");
+    graph_add_rule(&g, 4, "echo at 4; sleep 0.5");
+    graph_add_rule(&g, 5, "echo at 5; sleep 0.5");
+    graph_add_rule(&g, 6, "echo at 6; sleep 0.5");
 
     graph_add_edge(&g, 1, 0);
     graph_add_edge(&g, 2, 0);
@@ -22,7 +22,7 @@ int main(void)
     graph_add_edge(&g, 5, 2);
 
     graph_buildpartial(&g, &pg, (size_t[]){ 5 }, 1);
-    graph_execute(&pg, 5);
+    graph_execute(&pg, 5, 2);
     graph_delete(&pg);
     graph_delete(&g);
     return 0;

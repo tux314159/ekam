@@ -23,6 +23,6 @@ void adjlist_add(struct Node *from, size_t to);
 void graph_add_edge(struct Graph *g, size_t from, size_t to);
 void graph_add_rule(struct Graph *g, size_t at, const char *cmd);
 void graph_buildpartial(struct Graph *src, struct Graph *dest, size_t *starts, size_t n_starts);
-void graph_execute(struct Graph *g, size_t start);
+void graph_execute(struct Graph *g, size_t start, int max_childs);
 
 #endif
