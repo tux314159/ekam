@@ -5,28 +5,23 @@
 
 #define MAX_NODES 1024
 
-struct ARow {
+struct Node {
     size_t *adj;
     size_t len;
-};
-
-struct Node {
-    char *fname;
     char *cmd;
 };
 
 struct Graph {
-    struct ARow *graph;
-    struct Node *nodes;
+    struct Node *graph;
     size_t n_nodes;
 };
 
 struct Graph graph_make(void);
 void graph_delete(struct Graph g);
-void adjlist_add(struct ARow *from, size_t to);
+void adjlist_add(struct Node *from, size_t to);
 void graph_add_edge(struct Graph graph, size_t from, size_t to);
-void graph_bfs_into(struct Graph src, struct Graph dest, size_t start);
+void graph_add_rule(struct Graph graph, size_t at, const char *cmd);
 void graph_buildpartial(struct Graph src, struct Graph dest, size_t *starts, size_t n_starts);
-void graph_execute(struct Graph g);
+void graph_execute(struct Graph g, size_t start);
 
 #endif
