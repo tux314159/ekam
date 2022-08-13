@@ -2,4 +2,4 @@
 echo "Generating amalgamation"
 cpp -P -Iinclude everything.gen > everything
 echo "Building main"
-gcc -o -lpthread -lrt main main.c
+gcc -o main -lpthread -lrt main.c
