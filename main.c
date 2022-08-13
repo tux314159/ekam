@@ -1,4 +1,4 @@
-#include "everything"
+#include "ekam"
 
 int main(void)
 {
