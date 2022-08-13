@@ -1,5 +1,4 @@
-#include <stdio.h>
-#include "graph.h"
+#include "everything"
 
 int main(void)
 {

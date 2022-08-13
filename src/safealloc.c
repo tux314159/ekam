@@ -1,6 +1,6 @@
 #include <assert.h>
 #include <stdlib.h>
-#include "debug.h"
+#include "util/debug.h"
 #include "safealloc.h"
 
 void *malloc_s(size_t size)
