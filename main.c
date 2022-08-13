@@ -1,6 +1,6 @@
 #include "ekam"
 
-int main(void)
+int main(int argc, char **argv)
 {
     struct Graph g = graph_make();
     struct Graph pg = graph_make();
@@ -21,7 +21,7 @@ int main(void)
     graph_add_edge(&g, 5, 2);
 
     graph_buildpartial(&g, &pg, (size_t[]){ 5 }, 1);
-    graph_execute(&pg, 5, 2);
+    graph_execute(&pg, 5, argc == 1 ? 1 : atoi(argv[1]));
     graph_delete(&pg);
     graph_delete(&g);
     return 0;
