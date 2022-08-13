@@ -1,5 +1,6 @@
 #include <fcntl.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -61,9 +62,10 @@ void graph_add_edge(struct Graph *g, size_t from, size_t to)
 {
     struct Node *afrom  = g->graph + from;
     struct Node *rafrom = g->rgraph + to;
+    g->n_nodes += g->graph[from].len == 0 && g->rgraph[from].len == 0;
+    g->n_nodes += g->graph[to].len == 0 && g->rgraph[to].len == 0;
     adjlist_add(afrom, to);
     adjlist_add(rafrom, from);
-    g->n_nodes++;
     return;
 }
 

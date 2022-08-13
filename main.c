@@ -11,14 +11,18 @@ int main(int argc, char **argv)
     graph_add_rule(&g, 4, "echo at 4; sleep 0.5");
     graph_add_rule(&g, 5, "echo at 5; sleep 0.5");
     graph_add_rule(&g, 6, "echo at 6; sleep 0.5");
+    graph_add_rule(&g, 7, "echo at 7; sleep 0.5");
 
+    graph_add_edge(&g, 0, 7);
     graph_add_edge(&g, 1, 0);
+    graph_add_edge(&g, 1, 7);
     graph_add_edge(&g, 2, 0);
     graph_add_edge(&g, 2, 6);
     graph_add_edge(&g, 3, 1);
     graph_add_edge(&g, 4, 1);
     graph_add_edge(&g, 5, 4);
     graph_add_edge(&g, 5, 2);
+    graph_add_edge(&g, 6, 7);
 
     graph_buildpartial(&g, &pg, (size_t[]){ 5 }, 1);
     graph_execute(&pg, 5, argc == 1 ? 1 : atoi(argv[1]));
