@@ -207,8 +207,7 @@ void graph_execute(struct Graph *g, size_t start, int max_childs)
 				(*n_childs)++;
 				processed[*c] = 1;
 				cnt++;
-				pid_t pid = fork();
-				if (!pid) {
+				if (!fork()) {
 					processed[*c] = 1;
 					system(g->graph[*c].cmd);
 					processed[*c] = 2;
