@@ -22,32 +22,32 @@
 #include <stdlib.h>
 
 #define NULLDIE(x)                       \
-    do {                                 \
-        if (x == NULL) {                 \
-            fprintf(                     \
-                stderr,                  \
-                "NULL @ %s in %s:%d!\n", \
-                __func__,                \
-                __FILE__,                \
-                __LINE__);               \
-            exit(1);                     \
-        };                               \
-    } while (0);
+	do {                                 \
+		if (x == NULL) {                 \
+			fprintf(                     \
+				stderr,                  \
+				"NULL @ %s in %s:%d!\n", \
+				__func__,                \
+				__FILE__,                \
+				__LINE__);               \
+			exit(1);                     \
+		};                               \
+	} while (0);
 
 #ifndef NDEBUG
 
 #define debugpf(...)                                                           \
-    do {                                                                       \
-        fprintf(stderr, __VA_ARGS__);                                          \
-        fprintf(stderr, "    [@%s in %s:%d]\n", __func__, __FILE__, __LINE__); \
-    } while (0);
+	do {                                                                       \
+		fprintf(stderr, __VA_ARGS__);                                          \
+		fprintf(stderr, "    [@%s in %s:%d]\n", __func__, __FILE__, __LINE__); \
+	} while (0);
 #define dbgidntpf(level, ...)                      \
-    do {                                           \
-        for (size_t ___ = 0; ___ < level; ___++) { \
-            fprintf(stderr, " ");                  \
-        }                                          \
-        debugpf(__VA_ARGS__);                      \
-    } while (0);
+	do {                                           \
+		for (size_t ___ = 0; ___ < level; ___++) { \
+			fprintf(stderr, " ");                  \
+		}                                          \
+		debugpf(__VA_ARGS__);                      \
+	} while (0);
 
 #else
 
@@ -57,9 +57,9 @@
 #endif
 
 #define die(status, ...)      \
-    do {                      \
-        debugpf(__VA_ARGS__); \
-        exit(status);         \
-    } while (0)
+	do {                      \
+		debugpf(__VA_ARGS__); \
+		exit(status);         \
+	} while (0)
 
 #endif

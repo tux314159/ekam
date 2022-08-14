@@ -1,7 +1,7 @@
 ---
 Language:        Cpp
 ColumnLimit:     80
-ForEachMacros:   ['HASH_ITER']
+ForEachMacros:   []
 
 AlignAfterOpenBracket:          AlwaysBreak
 AlignConsecutiveMacros:         Consecutive
@@ -38,6 +38,7 @@ DerivePointerAlignment: false
 PointerAlignment:       Right
 
 IndentWidth:        4
+TabWidth:           4
 IndentCaseLabels:   false
 IndentCaseBlocks:   false
 
@@ -48,5 +49,5 @@ SortIncludes:                   true
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCaseColon:           false
 UseCRLF:                        false
-UseTab:                         Never
+UseTab:                         AlignWithSpaces
 ...

@@ -1,5 +1,8 @@
 #! /bin/sh
-echo "Generating amalgamation"
-cpp -P -Iinclude ekam.gen > ekam
+
+cflags=$(cat compile_flags.txt | tr '\n' ' ')
+
+[ -z "$CC" ] && CC=gcc
+
 echo "Building main"
-gcc -o main -lpthread -lrt main.c
+$CC $cflags -o main main.c src/*.c -lpthread -lrt
