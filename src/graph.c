@@ -179,7 +179,7 @@ void graph_execute(struct Graph *g, size_t start, int max_childs)
     size_t cnt = 0;
     for (;;) {
         wait(NULL); // clean up zombies
-        msleep(10);
+        msleep(1);
 
         if (cnt == g->n_nodes) {
             // processed all nodes, we are done
