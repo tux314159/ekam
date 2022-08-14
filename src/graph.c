@@ -16,7 +16,7 @@ static void msleep(long msec)
 {
     struct timespec ts;
 
-    ts.tv_sec = msec / 1000;
+    ts.tv_sec  = msec / 1000;
     ts.tv_nsec = (msec % 1000) * 1000000;
 
     nanosleep(&ts, &ts);
@@ -74,6 +74,20 @@ void graph_add_rule(struct Graph *g, size_t at, const char *cmd)
     struct Node *afrom = g->graph + at;
     afrom->cmd         = malloc((strlen(cmd) + 1) * sizeof(char));
     strcpy(afrom->cmd, cmd);
+    return;
+}
+
+void graph_add_target(
+    struct Graph *g,
+    size_t        target,
+    size_t       *deps,
+    size_t        n_deps,
+    const char   *cmd)
+{
+    graph_add_rule(g, target, cmd);
+    for (size_t *d = deps; d < deps + n_deps; d++) {
+        graph_add_edge(g, *d, target);
+    }
     return;
 }
 
@@ -152,12 +166,13 @@ void graph_execute(struct Graph *g, size_t start, int max_childs)
     }
 
     // set up shm
-    const char *shm_name = "/ekam";
-    const size_t shm_sz = sizeof(int) + sizeof(int) * MAX_NODES;
+    const char  *shm_name = "/ekam";
+    const size_t shm_sz   = sizeof(int) + sizeof(int) * MAX_NODES;
     int shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     shm_unlink(shm_name);
     ftruncate(shm_fd, (off_t)shm_sz);
-    int *n_childs = mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+    int *n_childs =
+        mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
     int *processed = n_childs + 1;
     memset(processed, 0, sizeof(int) * MAX_NODES);
 
