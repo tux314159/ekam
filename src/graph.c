@@ -179,26 +179,26 @@ graph_execute(struct Graph *g, int max_childs)
 	int shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 	shm_unlink(shm_name);
 	ftruncate(shm_fd, (off_t)shm_sz);
-	void *mem = mmap(
+	sem_t *n_childs = mmap(
 		NULL,
 		shm_sz,
 		PROT_READ | PROT_WRITE,
 		MAP_SHARED,
 		shm_fd,
 		0
-	); // just for clarity :p
-	sem_t *n_childs = (sem_t *)mem;
-	sem_t *plock    = (sem_t *)mem + 1;
+	);
+	sem_t *plock = (sem_t *)n_childs + 1;
 	sem_init(n_childs, 1, 0);
 	sem_init(plock, 1, (unsigned)max_childs);
 
-	int *processed = (int *)((sem_t *)mem + 2);
+	int *processed = (int *)((sem_t *)n_childs + 2);
 	memset(processed, 0, sizeof(int) * MAX_NODES);
 
 	int    n_c;
 	size_t cnt = 0;
 	for (;;) {
-		while (waitpid(-1, NULL, WNOHANG) > 0); // reap dead children
+		while (waitpid(-1, NULL, WNOHANG) > 0)
+			; // reap dead children
 		sem_getvalue(plock, &n_c);
 		sem_wait(plock);
 
@@ -241,5 +241,5 @@ graph_execute(struct Graph *g, int max_childs)
 	}
 	sem_destroy(n_childs);
 	sem_destroy(plock);
-	munmap(mem, shm_sz);
+	munmap(n_childs, shm_sz);
 }
