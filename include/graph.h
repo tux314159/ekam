@@ -36,6 +36,15 @@ graph_add_target(
 	size_t        n_deps,
 	const char   *cmd
 );
+#define ADD_TARGET(g, targ, cmd, ...)                     \
+	graph_add_target(                                     \
+		g,                                                \
+		targ,                                             \
+		(size_t[]){__VA_ARGS__},                          \
+		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
+		cmd                                               \
+	);
+#define ADD_INITIAL(g, targ, cmd) graph_add_target(g, targ, NULL, 0, cmd);
 void
 graph_buildpartial(
 	struct Graph *src,
