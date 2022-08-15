@@ -187,7 +187,7 @@ graph_execute(struct Graph *g, int max_childs)
 		shm_fd,
 		0
 	);
-	sem_t *plock = (sem_t *)n_childs + 1;
+	sem_t *plock = n_childs + 1;
 	sem_init(n_childs, 1, 0);
 	sem_init(plock, 1, (unsigned)max_childs);
 
