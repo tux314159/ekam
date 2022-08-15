@@ -7,24 +7,11 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
-#include <time.h>
 #include <unistd.h>
 #include <util/debug.h>
 
 #include "graph.h"
 #include "safealloc.h"
-
-static void
-msleep(long msec)
-{
-	struct timespec ts;
-
-	ts.tv_sec  = msec / 1000;
-	ts.tv_nsec = (msec % 1000) * 1000000;
-
-	nanosleep(&ts, &ts);
-	return;
-}
 
 struct Graph
 graph_make(void)
@@ -198,7 +185,6 @@ graph_execute(struct Graph *g, int max_childs)
 	size_t cnt = 0;
 	for (;;) {
 		wait(NULL); // clean up zombies
-		msleep(1);
 
 		if (cnt == g->n_nodes) {
 			// processed all nodes, we are done
