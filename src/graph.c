@@ -1,4 +1,5 @@
 #include <fcntl.h>
+#include <semaphore.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -7,6 +8,7 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 #include <util/debug.h>
 
@@ -173,18 +175,32 @@ graph_execute(struct Graph *g, int max_childs)
 
 	// set up shm
 	const char  *shm_name = "/ekam";
-	const size_t shm_sz   = sizeof(int) + sizeof(int) * MAX_NODES;
+	const size_t shm_sz   = sizeof(sem_t) * 2 + sizeof(int) * MAX_NODES;
 	int shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 	shm_unlink(shm_name);
 	ftruncate(shm_fd, (off_t)shm_sz);
-	int *n_childs =
-		mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
-	int *processed = n_childs + 1;
+	void *mem = mmap(
+		NULL,
+		shm_sz,
+		PROT_READ | PROT_WRITE,
+		MAP_SHARED,
+		shm_fd,
+		0
+	); // just for clarity :p
+	sem_t *n_childs = (sem_t *)mem;
+	sem_t *plock    = (sem_t *)mem + 1;
+	sem_init(n_childs, 1, 0);
+	sem_init(plock, 1, (unsigned)max_childs);
+
+	int *processed = (int *)((sem_t *)mem + 2);
 	memset(processed, 0, sizeof(int) * MAX_NODES);
 
+	int    n_c;
 	size_t cnt = 0;
 	for (;;) {
-		wait(NULL); // clean up zombies
+		while (waitpid(-1, NULL, WNOHANG) > 0); // reap dead children
+		sem_getvalue(plock, &n_c);
+		sem_wait(plock);
 
 		if (cnt == g->n_nodes) {
 			// processed all nodes, we are done
@@ -196,7 +212,8 @@ graph_execute(struct Graph *g, int max_childs)
 				continue;
 			}
 
-			if (*n_childs >= max_childs) {
+			sem_getvalue(n_childs, &n_c);
+			if (n_c >= max_childs) {
 				break;
 			}
 
@@ -208,18 +225,21 @@ graph_execute(struct Graph *g, int max_childs)
 			}
 
 			if (deps_sat) {
-				(*n_childs)++;
+				sem_post(n_childs);
 				processed[*c] = 1;
 				cnt++;
 				if (!fork()) {
 					processed[*c] = 1;
 					system(g->graph[*c].cmd);
 					processed[*c] = 2;
-					(*n_childs)--;
+					sem_wait(n_childs);
+					sem_post(plock);
 					_exit(0);
 				}
 			}
 		}
 	}
-	munmap(n_childs, shm_sz);
+	sem_destroy(n_childs);
+	sem_destroy(plock);
+	munmap(mem, shm_sz);
 }
