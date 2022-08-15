@@ -40,8 +40,8 @@ graph_delete(struct Graph *g)
 void
 adjlist_add(struct Node *from, size_t to)
 {
-	// naive linear search because yes
-	// ensure no duplicates
+	// Naive linear search because yes
+	// Ensure no duplicates
 	for (size_t *c = from->adj; c < from->adj + from->len; c++) {
 		if (*c == to) {
 			return;
@@ -154,7 +154,7 @@ graph_execute(struct Graph *g, int max_childs)
 	memset(tsorted, 0, sizeof(size_t) * MAX_NODES);
 	visited[0] = true;
 
-	// toposort
+	// Toposort
 	size_t i = 0;
 	while (h != t) {
 		size_t c = queue[h];
@@ -162,7 +162,7 @@ graph_execute(struct Graph *g, int max_childs)
 
 		tsorted[i++] = c;
 
-		// enqueue dependants
+		// Enqueue dependants
 		for (size_t *n = g->graph[c].adj; n < g->graph[c].adj + g->graph[c].len;
 		     n++) {
 			if (!visited[*n]) {
@@ -173,37 +173,38 @@ graph_execute(struct Graph *g, int max_childs)
 		}
 	}
 
-	// set up shm
+	// Set up shm
 	const char  *shm_name = "/ekam";
 	const size_t shm_sz   = sizeof(sem_t) * 2 + sizeof(int) * MAX_NODES;
 	int shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 	shm_unlink(shm_name);
 	ftruncate(shm_fd, (off_t)shm_sz);
-	sem_t *n_childs = mmap(
+	void *mem = mmap(
 		NULL,
 		shm_sz,
 		PROT_READ | PROT_WRITE,
 		MAP_SHARED,
 		shm_fd,
 		0
-	);
-	sem_t *plock = n_childs + 1;
+	); // For clarity
+    sem_t *n_childs = mem;
+	sem_t *plock = (sem_t *)mem + 1;
 	sem_init(n_childs, 1, 0);
 	sem_init(plock, 1, (unsigned)max_childs);
 
-	int *processed = (int *)((sem_t *)n_childs + 2);
+	int *processed = (int *)((sem_t *)mem + 2);
 	memset(processed, 0, sizeof(int) * MAX_NODES);
 
 	int    n_c;
 	size_t cnt = 0;
 	for (;;) {
 		while (waitpid(-1, NULL, WNOHANG) > 0)
-			; // reap dead children
+			; // Reap dead children
 		sem_getvalue(plock, &n_c);
 		sem_wait(plock);
 
 		if (cnt == g->n_nodes) {
-			// processed all nodes, we are done
+			// Processed all nodes, we are done
 			break;
 		}
 
@@ -241,5 +242,5 @@ graph_execute(struct Graph *g, int max_childs)
 	}
 	sem_destroy(n_childs);
 	sem_destroy(plock);
-	munmap(n_childs, shm_sz);
+	munmap(mem, shm_sz);
 }
