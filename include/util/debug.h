@@ -29,7 +29,8 @@
 				"NULL @ %s in %s:%d!\n", \
 				__func__,                \
 				__FILE__,                \
-				__LINE__);               \
+				__LINE__                 \
+			);                           \
 			exit(1);                     \
 		};                               \
 	} while (0);

@@ -3,7 +3,7 @@ Language:        Cpp
 ColumnLimit:     80
 ForEachMacros:   []
 
-AlignAfterOpenBracket:          AlwaysBreak
+AlignAfterOpenBracket:          BlockIndent
 AlignConsecutiveMacros:         Consecutive
 AlignConsecutiveAssignments:    Consecutive
 AlignConsecutiveBitFields:      Consecutive
@@ -20,6 +20,7 @@ AllowShortCaseLabelsOnASingleLine:          false
 AllowShortFunctionsOnASingleLine:           None
 AllowShortIfStatementsOnASingleLine:        Never
 
+AlwaysBreakAfterReturnType: All
 BreakBeforeBraces:      Custom
 BraceWrapping:
   AfterCaseLabel:       false

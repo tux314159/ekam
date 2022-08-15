@@ -9,11 +9,13 @@
 #include <sys/wait.h>
 #include <time.h>
 #include <unistd.h>
+#include <util/debug.h>
 
 #include "graph.h"
 #include "safealloc.h"
 
-static void msleep(long msec)
+static void
+msleep(long msec)
 {
 	struct timespec ts;
 
@@ -24,7 +26,8 @@ static void msleep(long msec)
 	return;
 }
 
-struct Graph graph_make(void)
+struct Graph
+graph_make(void)
 {
 	return (struct Graph){
 		.graph   = calloc_s(MAX_NODES, sizeof(struct Node)),
@@ -33,7 +36,8 @@ struct Graph graph_make(void)
 	};
 }
 
-void graph_delete(struct Graph *g)
+void
+graph_delete(struct Graph *g)
 {
 	for (int i = 0; i < MAX_NODES; i++) {
 		free(g->graph[i].adj);
@@ -44,7 +48,8 @@ void graph_delete(struct Graph *g)
 	return;
 }
 
-void adjlist_add(struct Node *from, size_t to)
+void
+adjlist_add(struct Node *from, size_t to)
 {
 	// naive linear search because yes
 	// ensure no duplicates
@@ -59,8 +64,12 @@ void adjlist_add(struct Node *from, size_t to)
 	return;
 }
 
-void graph_add_edge(struct Graph *g, size_t from, size_t to)
+void
+graph_add_edge(struct Graph *g, size_t from, size_t to)
 {
+	if (!(from && to)) {
+	}
+
 	struct Node *afrom  = g->graph + from;
 	struct Node *rafrom = g->rgraph + to;
 	g->n_nodes += g->graph[from].len == 0 && g->rgraph[from].len == 0;
@@ -70,7 +79,8 @@ void graph_add_edge(struct Graph *g, size_t from, size_t to)
 	return;
 }
 
-void graph_add_rule(struct Graph *g, size_t at, const char *cmd)
+void
+graph_add_rule(struct Graph *g, size_t at, const char *cmd)
 {
 	struct Node *afrom = g->graph + at;
 	afrom->cmd         = malloc((strlen(cmd) + 1) * sizeof(char));
@@ -78,12 +88,14 @@ void graph_add_rule(struct Graph *g, size_t at, const char *cmd)
 	return;
 }
 
-void graph_add_target(
+void
+graph_add_target(
 	struct Graph *g,
 	size_t        target,
 	size_t       *deps,
 	size_t        n_deps,
-	const char   *cmd)
+	const char   *cmd
+)
 {
 	graph_add_rule(g, target, cmd);
 	for (size_t *d = deps; d < deps + n_deps; d++) {
@@ -92,7 +104,8 @@ void graph_add_target(
 	return;
 }
 
-static void _bfs_copy(struct Graph *src, struct Graph *dest, size_t start)
+static void
+_bfs_copy(struct Graph *src, struct Graph *dest, size_t start)
 {
 	size_t queue[MAX_NODES];
 	size_t h = 0, t = 1;
@@ -123,29 +136,34 @@ static void _bfs_copy(struct Graph *src, struct Graph *dest, size_t start)
 	return;
 }
 
-void graph_buildpartial(
+void
+graph_buildpartial(
 	struct Graph *src,
 	struct Graph *dest,
 	size_t       *starts,
-	size_t        n_starts)
+	size_t        n_starts
+)
 {
-	for (size_t i = 0; i < n_starts; i++) {
-		_bfs_copy(src, dest, starts[i]);
+	graph_add_rule(dest, 0, "");
+	for (size_t *i = starts; i < starts + n_starts; i++) {
+		_bfs_copy(src, dest, *i);
+		graph_add_edge(dest, 0, *i);
 	}
 	return;
 }
 
-void graph_execute(struct Graph *g, size_t start, int max_childs)
+void
+graph_execute(struct Graph *g, int max_childs)
 {
 	size_t queue[MAX_NODES];
 	size_t h = 0, t = 1;
-	queue[0] = start;
+	queue[0] = 0;
 
 	bool   visited[MAX_NODES];
 	size_t tsorted[MAX_NODES];
 	memset(visited, false, sizeof(bool) * MAX_NODES);
 	memset(tsorted, 0, sizeof(size_t) * MAX_NODES);
-	visited[start] = true;
+	visited[0] = true;
 
 	// toposort
 	size_t i = 0;
