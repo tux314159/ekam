@@ -2,7 +2,6 @@
 #include <semaphore.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -174,21 +173,18 @@ graph_execute(struct Graph *g, int max_childs)
 	}
 
 	// Set up shm
-	const char  *shm_name = "/ekam";
-	const size_t shm_sz   = sizeof(sem_t) * 2 + sizeof(int) * MAX_NODES;
-	int shm_fd = shm_open(shm_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-	shm_unlink(shm_name);
-	ftruncate(shm_fd, (off_t)shm_sz);
-	void *mem = mmap(
-		NULL,
-		shm_sz,
-		PROT_READ | PROT_WRITE,
-		MAP_SHARED,
-		shm_fd,
-		0
-	); // For clarity
-    sem_t *n_childs = mem;
-	sem_t *plock = (sem_t *)mem + 1;
+	const size_t shm_sz  = sizeof(sem_t) * 2 + sizeof(int) * MAX_NODES;
+	int          zero_fd = open("/dev/zero", O_RDWR);
+	void        *mem     = mmap(
+        NULL,
+        shm_sz,
+        PROT_READ | PROT_WRITE,
+        MAP_SHARED,
+        zero_fd,
+        0
+    ); // For clarity
+	sem_t *n_childs = mem;
+	sem_t *plock    = (sem_t *)mem + 1;
 	sem_init(n_childs, 1, 0);
 	sem_init(plock, 1, (unsigned)max_childs);
 
