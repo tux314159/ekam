@@ -41,7 +41,7 @@ get_changed(struct listhead *cur, DBM *old);
  * Gets the node number of a particular name by consulting the
  * global hashmap.
  */
-ssize_t
-get_nn(char *name);
+size_t
+get_nn(const char *name);
 
 #endif

@@ -121,14 +121,21 @@ get_changed(struct listhead *cur, DBM *old)
     return arr;
 }
 
-ssize_t
-get_nn(char *name)
+size_t
+get_nn(const char *cname)
 {
 	ENTRY e;
+
+	// Un-const
+	char *name = malloc(strlen(cname) + 1);
+	strcpy(name, cname);
+	name[strlen(name)] = '\0';
+
 	e.key = name;
 	ENTRY *r = hsearch(e, FIND);
 	if (!r) {
-		return -1;
+		return 0;
 	}
-	return (ssize_t)r->data;
+	free(name);
+	return (size_t)r->data;
 }
