@@ -17,5 +17,7 @@ void
 fhlist_to_db(struct listhead *list, DBM *db);
 char **
 get_changed(struct listhead *cur, DBM *old);
+ssize_t
+get_nn(char *name);
 
 #endif
