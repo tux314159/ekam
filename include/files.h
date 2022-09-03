@@ -1,4 +1,6 @@
-#ifndef INCLUDE_FS
+#ifndef INCLUDE_FILES
+#define INCLUDE_FILES
+
 #include <sys/queue.h>
 #include <ndbm.h>
 
