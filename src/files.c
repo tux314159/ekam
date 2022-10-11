@@ -120,15 +120,3 @@ get_changed(struct listhead *cur, DBM *old)
 
     return arr;
 }
-
-ssize_t
-get_nn(char *name)
-{
-	ENTRY e;
-	e.key = name;
-	ENTRY *r = hsearch(e, FIND);
-	if (!r) {
-		return -1;
-	}
-	return (ssize_t)r->data;
-}
