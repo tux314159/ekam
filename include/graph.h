@@ -49,14 +49,12 @@ graph_add_edge(struct Graph *g, size_t from, size_t to);
 void
 graph_add_rule(struct Graph *g, size_t at, const char *cmd);
 /*
- * Add a target, along with dependencies. This is mostly a
- * wrapper around the simple functions described above. Also
- * maps filename <-> node number for later use in the hashmap.
+ * Add a target, along with dependencies. This is a wrapper
+ * around the simple functions described above.
  */
 void
 graph_add_target(
 	struct Graph *g,
-	const char   *filename,
 	size_t        target,
 	size_t       *deps,
 	size_t        n_deps,
@@ -82,17 +80,16 @@ void
 graph_execute(struct Graph *g, int max_childs);
 
 // Macros for convenience (use them!)
-#define ADD_TARGET(filename, targ, cmd, ...)              \
+#define ADD_TARGET(targ, cmd, ...)                        \
 	graph_add_target(                                     \
 		&_EKAM_MAIN_GRAPH,                                \
-		filename,                                         \
 		targ,                                             \
 		(size_t[]){__VA_ARGS__},                          \
 		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
 		cmd                                               \
 	)
-#define ADD_INITIAL(filename, targ, cmd) \
-	graph_add_target(&_EKAM_MAIN_GRAPH, filename, targ, NULL, 0, cmd);
+#define ADD_INITIAL(targ, cmd) \
+	graph_add_target(&_EKAM_MAIN_GRAPH, targ, NULL, 0, cmd);
 #define BUILDPARTIAL(...)                                \
 	graph_buildpartial(                                  \
 		&_EKAM_MAIN_GRAPH,                               \

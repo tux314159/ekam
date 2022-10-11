@@ -1,5 +1,4 @@
 #include <fcntl.h>
-#include <search.h>
 #include <semaphore.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -80,7 +79,6 @@ graph_add_rule(struct Graph *g, size_t at, const char *cmd)
 void
 graph_add_target(
 	struct Graph *g,
-	const char   *filename,
 	size_t        target,
 	size_t       *deps,
 	size_t        n_deps,
@@ -91,15 +89,6 @@ graph_add_target(
 	for (size_t *d = deps; d < deps + n_deps; d++) {
 		graph_add_edge(g, *d, target);
 	}
-
-	// Add it to the hashmap
-	ENTRY e;
-	e.key = malloc_s(strlen(filename) + 1);
-	e.key[strlen(filename)] = '\0';
-	strcpy(e.key, filename);
-	e.data = (void *) target; // NOT A POINTER
-	hsearch(e, ENTER);
-
 	return;
 }
 
