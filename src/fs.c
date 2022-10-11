@@ -18,10 +18,9 @@ file_compute_sha1(const char *filename, char buf[41])
     fseek(fp, 0, SEEK_END); 
     size_t fsz = (size_t) ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    char *fcontent = malloc_s(fsz);
+    char *fcontent = malloc(fsz);
     fread(fcontent, 1, fsz, fp);
     SHA1Data((uint8_t *)fcontent, strlen(fcontent), buf);
-    free(fcontent);
     return;
 }
 
@@ -41,7 +40,7 @@ walkdir_storehash(const char *dirname, struct listhead *list)
         }
 
         // Get full pathname
-        char *fullpath = malloc_s(strlen(dirname) + strlen(fname) + 2);
+        char *fullpath = malloc(strlen(dirname) + strlen(fname) + 2);
         strcpy(fullpath, dirname);
         fullpath[strlen(dirname)] = '/';
         strcpy(fullpath + strlen(dirname) + 1, fname);
@@ -57,7 +56,7 @@ walkdir_storehash(const char *dirname, struct listhead *list)
             file_compute_sha1(fullpath, hash);
 
             // Store it in list
-            struct filehash *e = malloc_s(sizeof(struct filehash));
+            struct filehash *e = malloc(sizeof(struct filehash));
             e->filename = fullpath;
             strcpy(e->hash, hash);
             LIST_INSERT_HEAD(list, e, entries);
@@ -93,7 +92,7 @@ get_changed(struct listhead *cur, DBM *old)
 {
     size_t len = 0;
     size_t size = 1;
-    char **arr = malloc_s(sizeof(char *));
+    char **arr = malloc(sizeof(char *));
     struct filehash *fh;
     // Loop through all current file/hash pairs, check hashes
     LIST_FOREACH(fh, cur, entries) {
