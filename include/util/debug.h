@@ -40,7 +40,7 @@
 #define debugpf(...)                                                           \
 	do {                                                                       \
 		fprintf(stderr, __VA_ARGS__);                                          \
-		fprintf(stderr, "\t\t[@%s in %s:%d]\n", __func__, __FILE__, __LINE__); \
+		fprintf(stderr, "    [@%s in %s:%d]\n", __func__, __FILE__, __LINE__); \
 	} while (0);
 #define dbgidntpf(level, ...)                      \
 	do {                                           \
