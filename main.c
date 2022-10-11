@@ -1,8 +1,6 @@
-#include <fcntl.h>
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "fs.h"
 #include "graph.h"
 
 int
@@ -25,10 +23,5 @@ main(int argc, char **argv)
 	graph_execute(&pg, argc == 1 ? 1 : atoi(argv[1]));
 	graph_delete(&pg);
 	graph_delete(&g);
-
-    //DBM *db = dbm_open(dbname, O_CREAT | O_RDWR, 0644);
-    struct listhead list;
-    LIST_INIT(&list);
-    walkdir_storehash(".", &list);
 	return 0;
 }

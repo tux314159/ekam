@@ -182,7 +182,7 @@ graph_execute(struct Graph *g, int max_childs)
         MAP_SHARED,
         zero_fd,
         0
-    );
+    ); // For clarity
 	sem_t *n_childs = mem;
 	sem_t *plock    = (sem_t *)mem + 1;
 	sem_init(n_childs, 1, 0);
@@ -205,7 +205,6 @@ graph_execute(struct Graph *g, int max_childs)
 		}
 
 		for (size_t *c = tsorted; c < tsorted + g->n_nodes; c++) {
-            // Check if we can process the node
 			if (processed[*c]) {
 				continue;
 			}
@@ -222,7 +221,6 @@ graph_execute(struct Graph *g, int max_childs)
 				deps_sat &= (processed[*d] == 2);
 			}
 
-            // Process node if possible
 			if (deps_sat) {
 				sem_post(n_childs);
 				processed[*c] = 1;
