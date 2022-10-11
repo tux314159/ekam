@@ -8,7 +8,7 @@
 #include <sys/stat.h>
 #include <sha1.h>
 
-#include "files.h"
+#include "fs.h"
 #include "safealloc.h"
 
 void
@@ -18,10 +18,8 @@ file_compute_sha1(const char *filename, char buf[41])
     fseek(fp, 0, SEEK_END); 
     size_t fsz = (size_t) ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    char *fcontent = malloc_s(fsz + 1);
+    char *fcontent = malloc_s(fsz);
     fread(fcontent, 1, fsz, fp);
-	fcontent[fsz] = '\0';
-
     SHA1Data((uint8_t *)fcontent, strlen(fcontent), buf);
     free(fcontent);
     return;
@@ -56,7 +54,6 @@ walkdir_storehash(const char *dirname, struct listhead *list)
         } else {
             // Read file, calculate checksum
             char hash[41];
-			hash[40] = '\0';
             file_compute_sha1(fullpath, hash);
 
             // Store it in list
@@ -64,6 +61,7 @@ walkdir_storehash(const char *dirname, struct listhead *list)
             e->filename = fullpath;
             strcpy(e->hash, hash);
             LIST_INSERT_HEAD(list, e, entries);
+            printf("%s: %s\n", fullpath, hash);
         }
     }
 
@@ -77,11 +75,11 @@ fhlist_to_db(struct listhead *list, DBM *db)
     LIST_FOREACH(fh, list, entries) {
         datum key = {
             .dptr = fh->filename,
-            .dsize = strlen(fh->filename) + 1
+            .dsize = strlen(fh->filename)
         };
         datum entry = {
             .dptr = fh->hash,
-            .dsize = strlen(fh->hash) + 1
+            .dsize = strlen(fh->hash)
         };
         dbm_store(db, key, entry, DBM_REPLACE);
     }
@@ -101,7 +99,7 @@ get_changed(struct listhead *cur, DBM *old)
     LIST_FOREACH(fh, cur, entries) {
         datum key = {
             .dptr = fh->filename,
-            .dsize = strlen(fh->filename) + 1
+            .dsize = strlen(fh->filename)
         };
         datum resp = dbm_fetch(old, key);
 

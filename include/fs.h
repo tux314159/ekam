@@ -1,4 +1,5 @@
 #ifndef INCLUDE_FS
+#include <search.h>
 #include <sys/queue.h>
 #include <ndbm.h>
 

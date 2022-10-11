@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "files.h"
+#include "fs.h"
 #include "graph.h"
 
 int
