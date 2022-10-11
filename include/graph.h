@@ -18,40 +18,16 @@ struct Graph {
 	size_t       n_nodes;
 };
 
-/*
- * Create an empty graph.
- */
 struct Graph
 graph_make(void);
-/*
- * Delete a graph created by graph_create().
- */
 void
 graph_delete(struct Graph *g);
-/*
- * Add a node to the adjacency list;
- * checks for duplicates.
- * TODO: optimise
- */
 void
 adjlist_add(struct Node *from, size_t to);
-/*
- * Add an edge between two nodes.
- * It's "bidirectional": adds one direction to graph,
- * the other direction to rgraph.
- */
 void
 graph_add_edge(struct Graph *g, size_t from, size_t to);
-/*
- * Add a rule to a target. The rule will is a shell command that
- * will be executed.
- */
 void
 graph_add_rule(struct Graph *g, size_t at, const char *cmd);
-/*
- * Add a target, along with dependencies. This is a wrapper
- * around the simple functions described above.
- */
 void
 graph_add_target(
 	struct Graph *g,
@@ -60,12 +36,15 @@ graph_add_target(
 	size_t        n_deps,
 	const char   *cmd
 );
-/*
- * Useless piece of shit that's here for some reason,
- * constructs a so-called "partial graph" based on what
- * has been updated. Also creates the node 0, which is the
- * starting point for graph_execute().
- */
+#define ADD_TARGET(g, targ, cmd, ...)                     \
+	graph_add_target(                                     \
+		g,                                                \
+		targ,                                             \
+		(size_t[]){__VA_ARGS__},                          \
+		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
+		cmd                                               \
+	);
+#define ADD_INITIAL(g, targ, cmd) graph_add_target(g, targ, NULL, 0, cmd);
 void
 graph_buildpartial(
 	struct Graph *src,
@@ -73,29 +52,7 @@ graph_buildpartial(
 	size_t       *starts,
 	size_t        n_starts
 );
-/*
- * Execute dependency graph, possibly in order.
- */
 void
 graph_execute(struct Graph *g, int max_childs);
-
-// Macros for convenience (use them!)
-#define ADD_TARGET(targ, cmd, ...)                        \
-	graph_add_target(                                     \
-		&_EKAM_MAIN_GRAPH,                                \
-		targ,                                             \
-		(size_t[]){__VA_ARGS__},                          \
-		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
-		cmd                                               \
-	)
-#define ADD_INITIAL(targ, cmd) \
-	graph_add_target(&_EKAM_MAIN_GRAPH, targ, NULL, 0, cmd);
-#define BUILDPARTIAL(...)                                \
-	graph_buildpartial(                                  \
-		&_EKAM_MAIN_GRAPH,                               \
-		&_EKAM_PART_GRAPH,                               \
-		(size_t[]){__VA_ARGS__},                         \
-		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t) \
-	)
 
 #endif
