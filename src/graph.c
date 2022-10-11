@@ -71,7 +71,7 @@ void
 graph_add_rule(struct Graph *g, size_t at, const char *cmd)
 {
 	struct Node *afrom = g->graph + at;
-	afrom->cmd         = malloc((strlen(cmd) + 1) * sizeof(char));
+	afrom->cmd         = malloc_s((strlen(cmd) + 1) * sizeof(char));
 	strcpy(afrom->cmd, cmd);
 	return;
 }
