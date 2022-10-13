@@ -9,42 +9,64 @@ struct Node {
 	size_t *adj;
 	size_t  len;
 	char   *cmd;
+	char   *filename; // TODO generalise
 };
 
 // WARNING: 0 is reserved
 struct Graph {
-	struct Node *graph;
-	struct Node *rgraph;
+	struct Node *deps;
 	size_t       n_nodes;
 };
 
+/*
+ * Create a graph.
+ */
 struct Graph
 graph_make(void);
+
+/*
+ * Delete a graph.
+ */
 void
 graph_delete(struct Graph *g);
-void
-adjlist_add(struct Node *from, size_t to);
+
+/*
+ * Create two nodes and link them in both the depgraph
+ * and the reverse depgraph.
+ */
 void
 graph_add_edge(struct Graph *g, size_t from, size_t to);
+
+/*
+ * Add metadata to a node.
+ * TODO generalise
+ */
 void
-graph_add_rule(struct Graph *g, size_t at, const char *cmd);
+graph_add_meta(
+	struct Graph *g,
+	size_t        at,
+	const char   *cmd,
+	const char   *filename
+);
+
+/*
+ * Wrapper around graph_add_meta and graph_add_edge
+ */
 void
 graph_add_target(
 	struct Graph *g,
 	size_t        target,
 	size_t       *deps,
 	size_t        n_deps,
-	const char   *cmd
+	const char   *cmd,
+	const char   *filename
 );
-#define ADD_TARGET(g, targ, cmd, ...)                     \
-	graph_add_target(                                     \
-		g,                                                \
-		targ,                                             \
-		(size_t[]){__VA_ARGS__},                          \
-		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
-		cmd                                               \
-	);
-#define ADD_INITIAL(g, targ, cmd) graph_add_target(g, targ, NULL, 0, cmd);
+
+/*
+ * Build the partial graph containg all nodes in need of updating
+ * starting from some starting points. Prunes nodes based on update
+ * time comparisons.
+ */
 void
 graph_buildpartial(
 	struct Graph *src,
@@ -52,7 +74,27 @@ graph_buildpartial(
 	size_t       *starts,
 	size_t        n_starts
 );
+
+/*
+ * Execute a graph, possibly in parallel.
+ */
 void
 graph_execute(struct Graph *g, int max_childs);
+
+/*
+ * Some convenient macros
+ */
+
+#define ADD_TARGET(g, targ, cmd, ...)                     \
+	graph_add_target(                                     \
+		g,                                                \
+		targ,                                             \
+		(size_t[]){__VA_ARGS__},                          \
+		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
+		cmd,                                              \
+        ""                                                \
+	);
+
+#define ADD_INITIAL(g, targ, cmd) graph_add_target(g, targ, NULL, 0, cmd, "");
 
 #endif
