@@ -71,8 +71,7 @@ void
 graph_buildpartial(
 	struct Graph *src,
 	struct Graph *dest,
-	size_t       *starts,
-	size_t        n_starts
+	size_t        start
 );
 
 /*

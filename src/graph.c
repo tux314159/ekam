@@ -166,17 +166,13 @@ void
 graph_buildpartial(
 	struct Graph *src,
 	struct Graph *dest,
-	size_t       *starts,
-	size_t        n_starts
+	size_t        start
 )
 {
 	// Build inverted graph with all deps.
 	struct Graph inv = graph_make();
 	graph_add_meta(&inv, 0, "", "");
-	for (size_t *i = starts; i < starts + n_starts; i++) {
-		_bfs_copy(src, &inv, *i, true);
-		graph_add_edge(&inv, *i, 0);
-	}
+	_bfs_copy(src, &inv, start, true);
 
 	// BFS on source to find leaves.
 	size_t *leaves = malloc_s(0);
@@ -201,14 +197,37 @@ graph_buildpartial(
 		}
 	}
 
-	// BFS and read mtimes.
+	// BFS, on inverted graph, read mtimes, check if node needs
+	// to be updated.
+	bool needupd[MAX_NODES];
+	memset(needupd, false, MAX_NODES);
 	{
 		BFS_BEGIN(queue, MAX_NODES, h, t, visited, 0);
+
+		// Push all leaves into the queue first - we want to simulate a
+		// node on top of all of these.
+		memcpy(queue, leaves, n_leaves);
+		t = n_leaves;
+
 		while (h != t) {
 			size_t c = QUEUE_POP(queue, h, MAX_NODES);
+
+			// Read dep mtime
+			struct stat csb;
+			stat(inv.deps[c].filename, &csb);
+
 			for (size_t *n = inv.deps[c].adj;
 				 n < inv.deps[c].adj + inv.deps[c].len;
 				 n++) {
+				// Read codep mtime
+				struct stat sb;
+				stat(inv.deps[*n].filename, &sb);
+
+				// Codep needs to be updated if dep was modified
+				// at a later or equal time. If dep needs to be
+				// updated so does codep.
+				needupd[c] |= (sb.st_mtime >= csb.st_mtime || needupd[*n]);
+				
 				if (!visited[*n]) {
 					visited[*n] = true;
 					QUEUE_PUSH(queue, t, MAX_NODES, *n);
