@@ -1,6 +1,7 @@
 #ifndef INCLUDE_GRAPH
 #define INCLUDE_GRAPH
 
+#include <stdbool.h>
 #include <sys/types.h>
 
 #define MAX_NODES 1024
@@ -8,6 +9,7 @@
 struct Node {
 	size_t *adj;
 	size_t  len;
+    bool    exists;
 	char   *cmd;
 	char   *filename; // TODO generalise
 };
@@ -31,8 +33,7 @@ void
 graph_delete(struct Graph *g);
 
 /*
- * Create two nodes and link them in both the depgraph
- * and the reverse depgraph.
+ * Add a unidirectional edge between two nodes, creating them if necessary
  */
 void
 graph_add_edge(struct Graph *g, size_t from, size_t to);
@@ -84,16 +85,16 @@ graph_execute(struct Graph *g, int max_childs);
  * Some convenient macros
  */
 
-#define ADD_TARGET(g, targ, cmd, ...)                     \
+#define ADD_TARGET(g, targ, cmd, filename, ...)           \
 	graph_add_target(                                     \
 		g,                                                \
 		targ,                                             \
 		(size_t[]){__VA_ARGS__},                          \
 		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
 		cmd,                                              \
-        ""                                                \
+        filename                                          \
 	);
 
-#define ADD_INITIAL(g, targ, cmd) graph_add_target(g, targ, NULL, 0, cmd, "");
+#define ADD_INITIAL(g, targ, cmd, filename) graph_add_target(g, targ, NULL, 0, cmd, filename);
 
 #endif

@@ -28,7 +28,7 @@
 	size_t _BFS_BEGIN_Q[_BFS_BEGIN_QSZ];                          \
 	size_t _BFS_BEGIN_H = 0, _BFS_BEGIN_T = 1;                    \
 	_BFS_BEGIN_Q[0] = _BFS_BEGIN_START;                           \
-	bool _BFS_BEGIN_VIS[_BFS_BEGIN_QSZ];                          \
+	char _BFS_BEGIN_VIS[_BFS_BEGIN_QSZ];                          \
 	memset(_BFS_BEGIN_VIS, false, sizeof(bool) * _BFS_BEGIN_QSZ); \
 	_BFS_BEGIN_VIS[_BFS_BEGIN_START] = true;
 
@@ -89,13 +89,12 @@ adjlist_add(struct Node *from, size_t to)
 void
 graph_add_edge(struct Graph *g, size_t from, size_t to)
 {
-	if (!(from && to)) {
-	}
-
-	struct Node *ato = g->deps + to;
-	g->n_nodes += g->deps[from].len == 0;
-	g->n_nodes += g->deps[to].len == 0;
-	adjlist_add(ato, from);
+	struct Node *afrom = g->deps + from;
+	g->n_nodes += !g->deps[from].exists;
+	g->n_nodes += !g->deps[to].exists;
+	adjlist_add(afrom, to);
+	g->deps[from].exists = 1;
+	g->deps[to].exists   = 1;
 	return;
 }
 
@@ -128,7 +127,7 @@ graph_add_target(
 {
 	graph_add_meta(g, target, cmd, filename);
 	for (size_t *d = deps; d < deps + n_deps; d++) {
-		graph_add_edge(g, *d, target);
+		graph_add_edge(g, target, *d);
 	}
 	return;
 }
@@ -146,11 +145,10 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 		     n < src->deps[c].adj + src->deps[c].len;
 		     n++) {
 
-			if (invert) {
+			if (invert)
 				graph_add_edge(dest, *n, c); // invert graph
-			} else {
+			else
 				graph_add_edge(dest, c, *n);
-			}
 
 			if (!visited[*n]) {
 				visited[*n] = true;
@@ -163,32 +161,27 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 }
 
 void
-graph_buildpartial(
-	struct Graph *src,
-	struct Graph *dest,
-	size_t        start
-)
+graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 {
-	// Build inverted graph with all deps.
+	// Build inverted graph with all deps. Essentially - reverse edges.
 	struct Graph inv = graph_make();
-	graph_add_meta(&inv, 0, "", "");
 	_bfs_copy(src, &inv, start, true);
 
 	// BFS on source to find leaves.
-	size_t *leaves = malloc_s(0);
+	size_t *leaves   = malloc_s(sizeof(*leaves));
 	size_t  n_leaves = 0;
 	{
-		BFS_BEGIN(queue, MAX_NODES, h, t, visited, 0);
+		BFS_BEGIN(queue, MAX_NODES, h, t, visited, start);
 		while (h != t) {
 			size_t c = QUEUE_POP(queue, h, MAX_NODES);
-			if (src->deps[c].len == 0) { // no deps, i.e. leaf
-				leaves = realloc_s(leaves, sizeof(size_t) * ++n_leaves);
-				leaves[n_leaves - 1] = c;
+			{ // no deps, i.e. leaf
+				leaves[n_leaves++] = c;
+				leaves = realloc_s(leaves, sizeof(*leaves) * (n_leaves + 1));
 			}
 
 			for (size_t *n = src->deps[c].adj;
-				 n < src->deps[c].adj + src->deps[c].len;
-				 n++) {
+			     n < src->deps[c].adj + src->deps[c].len;
+			     n++) {
 				if (!visited[*n]) {
 					visited[*n] = true;
 					QUEUE_PUSH(queue, t, MAX_NODES, *n);
@@ -199,42 +192,60 @@ graph_buildpartial(
 
 	// BFS, on inverted graph, read mtimes, check if node needs
 	// to be updated.
-	bool needupd[MAX_NODES];
+	char needupd[MAX_NODES];
 	memset(needupd, false, MAX_NODES);
 	{
 		BFS_BEGIN(queue, MAX_NODES, h, t, visited, 0);
 
 		// Push all leaves into the queue first - we want to simulate a
 		// node on top of all of these.
-		memcpy(queue, leaves, n_leaves);
+		memcpy(queue, leaves, n_leaves * sizeof(*leaves));
+		for (size_t i = 0; i < n_leaves; i++)
+			visited[leaves[i]] = true;
 		t = n_leaves;
 
 		while (h != t) {
 			size_t c = QUEUE_POP(queue, h, MAX_NODES);
+			// Copy metadata over
+			graph_add_meta(dest, c, src->deps[c].cmd, src->deps[c].filename);
 
 			// Read dep mtime
 			struct stat csb;
-			stat(inv.deps[c].filename, &csb);
+			int         csr = stat(inv.deps[c].filename, &csb);
 
 			for (size_t *n = inv.deps[c].adj;
-				 n < inv.deps[c].adj + inv.deps[c].len;
-				 n++) {
+			     n < inv.deps[c].adj + inv.deps[c].len;
+			     n++) {
 				// Read codep mtime
 				struct stat sb;
-				stat(inv.deps[*n].filename, &sb);
+				int         sr = stat(inv.deps[*n].filename, &sb);
 
 				// Codep needs to be updated if dep was modified
 				// at a later or equal time. If dep needs to be
 				// updated so does codep.
-				needupd[c] |= (sb.st_mtime >= csb.st_mtime || needupd[*n]);
-				
+				needupd[c] = needupd[c] || needupd[*n] || sr == -1 ||
+				             csr == -1 ||
+				             sb.st_mtim.tv_sec > csb.st_mtim.tv_sec ||
+				             (sb.st_mtim.tv_sec == csb.st_mtim.tv_sec &&
+				              sb.st_mtim.tv_nsec >= csb.st_mtim.tv_nsec) ||
+				             needupd[*n];
+				if (needupd[c])
+					graph_add_edge(dest, *n, c); // add to dest (uninvert graph)
+
 				if (!visited[*n]) {
 					visited[*n] = true;
 					QUEUE_PUSH(queue, t, MAX_NODES, *n);
 				}
 			}
+
+			if (needupd[c]) {
+				debugpf("Node %ld needs updating", c);
+			} else {
+				debugpf("Node %ld does not need updating", c);
+			}
 		}
 	}
+	graph_add_edge(dest, 0, start); // 0 node
 
 	free(leaves);
 	return;
@@ -271,19 +282,15 @@ graph_execute(struct Graph *g, int max_childs)
 		tsorted[g->n_nodes - i - 1] = tmp;
 	}
 
+	// Time to finally start executing shit!
+
 	// Set up shm
 	// XXX: is this portable? Will sem_t ever be smaller than int?
 	const size_t shm_sz = sizeof(int) + (sizeof(sem_t) - sizeof(int)) +
 	                      sizeof(sem_t) + sizeof(int) * MAX_NODES;
 	int   zero_fd = open("/dev/zero", O_RDWR);
-	void *mem     = mmap(
-        NULL,
-        shm_sz,
-        PROT_READ | PROT_WRITE,
-        MAP_SHARED,
-        zero_fd,
-        0
-    ); // For clarity
+	void *mem =
+		mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, zero_fd, 0);
 	int *n_childs = mem;
 	*n_childs     = 0;
 
@@ -297,7 +304,10 @@ graph_execute(struct Graph *g, int max_childs)
 	for (;;) {
 		while (waitpid(-1, NULL, WNOHANG) > 0)
 			; // Reap dead children
+		int val;
+		sem_getvalue(plock, &val);
 		sem_wait(plock);
+		sem_getvalue(plock, &val);
 
 		if (cnt == g->n_nodes) {
 			// Processed all nodes, we are done
@@ -339,42 +349,4 @@ graph_execute(struct Graph *g, int max_childs)
 	}
 	sem_destroy(plock);
 	munmap(mem, shm_sz);
-}
-
-/*
- * File stuff
- */
-
-/*
- * Recursively find all the mtimes of all files/dirs
- * under the directory named rtname and store them in
- * the global hashtable.
- */
-static void
-store_mtimes(char *rtname)
-{
-	DIR           *root = opendir(rtname);
-	struct dirent *child;
-	while ((child = readdir(root))) {
-		struct stat sbuf;
-		stat(child->d_name, &sbuf);
-
-		// Get mtime, insert in hashmap
-		char *fullpath =
-			malloc_s(strlen(rtname) + 1 + strlen(child->d_name) + 1);
-		// lol
-		strcpy(fullpath, rtname);
-		fullpath[strlen(rtname)] = '/';
-		strcpy(fullpath + strlen(rtname) + 1, child->d_name);
-		fullpath[strlen(rtname) + 1 + strlen(child->d_name)] = '\0';
-
-		ENTRY e = {.key = fullpath, .data = (void *)sbuf.st_mtime};
-		if (!hsearch(e, ENTER)) {
-			die(1, "Hashmap insertion failed!");
-		}
-
-		if (S_ISDIR(sbuf.st_mode)) {
-			// Recurse if dir
-		}
-	}
 }
