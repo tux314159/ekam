@@ -145,10 +145,11 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 		     n < src->deps[c].adj + src->deps[c].len;
 		     n++) {
 
-			if (invert)
+			if (invert) {
 				graph_add_edge(dest, *n, c); // invert graph
-			else
+			} else {
 				graph_add_edge(dest, c, *n);
+			}
 
 			if (!visited[*n]) {
 				visited[*n] = true;
