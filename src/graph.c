@@ -164,10 +164,6 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 void
 graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 {
-	// Build inverted graph with all deps. Essentially - reverse edges.
-	struct Graph inv = graph_make();
-	_bfs_copy(src, &inv, start, true);
-
 	// BFS on source to find leaves.
 	size_t *leaves   = malloc_s(sizeof(*leaves));
 	size_t  n_leaves = 0;
@@ -175,7 +171,7 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 		BFS_BEGIN(queue, MAX_NODES, h, t, visited, start);
 		while (h != t) {
 			size_t c = QUEUE_POP(queue, h, MAX_NODES);
-			{ // no deps, i.e. leaf
+			if (src->nodes[c].len == 0) { // no deps, i.e. leaf
 				leaves[n_leaves++] = c;
 				leaves = realloc_s(leaves, sizeof(*leaves) * (n_leaves + 1));
 			}
@@ -190,6 +186,10 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 			}
 		}
 	}
+
+	// Build inverted graph with all deps. Essentially - reverse edges.
+	struct Graph inv = graph_make();
+	_bfs_copy(src, &inv, start, true);
 
 	// BFS, on inverted graph, read mtimes, check if node needs
 	// to be updated.
@@ -221,32 +221,27 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 				struct stat sb;
 				int         sr = stat(inv.nodes[*n].filename, &sb);
 
-				// Codep needs to be updated if dep was modified
-				// at a later or equal time. If dep needs to be
-				// updated so does codep.
-				needupd[c] = needupd[c] || needupd[*n] || sr == -1 ||
-				             csr == -1 ||
-				             sb.st_mtim.tv_sec > csb.st_mtim.tv_sec ||
-				             (sb.st_mtim.tv_sec == csb.st_mtim.tv_sec &&
-				              sb.st_mtim.tv_nsec >= csb.st_mtim.tv_nsec) ||
-				             needupd[*n];
-				if (needupd[c])
+				if (c)
+					// Codep needs to be updated if dep was modified
+					// at a later or equal time. If dep needs to be
+					// updated so does codep.
+					needupd[*n] = needupd[*n] || needupd[c] || sr == -1 ||
+								 csr == -1 ||
+								 csb.st_mtim.tv_sec > sb.st_mtim.tv_sec ||
+								 (csb.st_mtim.tv_sec == sb.st_mtim.tv_sec &&
+								  csb.st_mtim.tv_nsec >= sb.st_mtim.tv_nsec);
+				if (needupd[*n]) {
+					debugpf("%ld nodes initially", dest->n_nodes);
 					graph_add_edge(dest, *n, c); // add to dest (uninvert graph)
-
-				if (!visited[*n]) {
-					visited[*n] = true;
-					QUEUE_PUSH(queue, t, MAX_NODES, *n);
+					debugpf("%ld nodes after adding edge from %ld to %ld", dest->n_nodes, *n, c);
 				}
-			}
 
-			if (needupd[c]) {
-				debugpf("Node %ld needs updating", c);
-			} else {
-				debugpf("Node %ld does not need updating", c);
+				QUEUE_PUSH(queue, t, MAX_NODES, *n);
 			}
 		}
 	}
 	graph_add_edge(dest, 0, start); // 0 node
+	debugpf("%ld nodes", dest->n_nodes);
 
 	free(leaves);
 	return;
@@ -317,6 +312,7 @@ graph_execute(struct Graph *g, int max_childs)
 		sem_wait(plock);
 		sem_getvalue(plock, &val);
 
+		debugpf("%ld out of %ld nodes processed", cnt, g->n_nodes);
 		if (cnt == g->n_nodes) {
 			// Processed all nodes, we are done
 			break;
