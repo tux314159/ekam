@@ -252,7 +252,7 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 	return;
 }
 
-struct __vec{
+struct __vec {
 	size_t sz;
 	size_t *arr;
 };
