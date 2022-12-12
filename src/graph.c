@@ -251,29 +251,36 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 	return;
 }
 
+struct __vec{
+	size_t sz;
+	size_t *arr;
+};
+
+static void toposort(struct Graph *g, size_t c, struct __vec *tsorted, char *visited)
+{
+	// Enqueue dependencies
+	for (size_t *n = g->deps[c].adj; n < g->deps[c].adj + g->deps[c].len;
+			n++) {
+		if (!visited[*n]) {
+			visited[*n] = true;
+			toposort(g, *n, tsorted, visited);
+		}
+	}
+	tsorted->arr[tsorted->sz++] = c;
+}
+
 void
 graph_execute(struct Graph *g, int max_childs)
 {
-	size_t tsorted[MAX_NODES];
-	memset(tsorted, 0, sizeof(size_t) * MAX_NODES);
-
-	BFS_BEGIN(queue, MAX_NODES, h, t, visited, 0);
-
-	// Toposort
-	for (size_t i = 0; h != t; i++) {
-		size_t c = QUEUE_POP(queue, h, MAX_NODES);
-
-		tsorted[i] = c;
-
-		// Enqueue dependencies
-		for (size_t *n = g->deps[c].adj; n < g->deps[c].adj + g->deps[c].len;
-		     n++) {
-			if (!visited[*n]) {
-				visited[*n] = true;
-				QUEUE_PUSH(queue, t, MAX_NODES, *n);
-			}
-		}
-	}
+	// DFS toposort
+	struct __vec tsorted_s;
+	tsorted_s.sz = 0;
+	tsorted_s.arr = calloc(MAX_NODES, sizeof(*tsorted_s.arr));
+	char visited[MAX_NODES];
+	memset(visited, 0, MAX_NODES);
+	visited[0] = 1;
+	toposort(g, 0, &tsorted_s, visited);
+	size_t *tsorted = tsorted_s.arr;
 
 	// Reverse toposorted array - it was actually done in reverse
 	for (size_t i = 0; i < g->n_nodes / 2; i++) {
@@ -349,4 +356,5 @@ graph_execute(struct Graph *g, int max_childs)
 	}
 	sem_destroy(plock);
 	munmap(mem, shm_sz);
+	free(tsorted);
 }
