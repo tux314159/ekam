@@ -16,7 +16,7 @@ struct Node {
 
 // WARNING: 0 is reserved
 struct Graph {
-	struct Node *deps;
+	struct Node *nodes;
 	size_t       n_nodes;
 };
 

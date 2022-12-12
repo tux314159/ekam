@@ -49,7 +49,7 @@ struct Graph
 graph_make(void)
 {
 	return (struct Graph){
-		.deps    = calloc_s(MAX_NODES, sizeof(struct Node)),
+		.nodes    = calloc_s(MAX_NODES, sizeof(struct Node)),
 		.n_nodes = 0,
 	};
 }
@@ -58,11 +58,11 @@ void
 graph_delete(struct Graph *g)
 {
 	for (int i = 0; i < MAX_NODES; i++) {
-		free(g->deps[i].adj);
-		free(g->deps[i].cmd);
-		free(g->deps[i].filename);
+		free(g->nodes[i].adj);
+		free(g->nodes[i].cmd);
+		free(g->nodes[i].filename);
 	}
-	free(g->deps);
+	free(g->nodes);
 	return;
 }
 
@@ -89,12 +89,12 @@ adjlist_add(struct Node *from, size_t to)
 void
 graph_add_edge(struct Graph *g, size_t from, size_t to)
 {
-	struct Node *afrom = g->deps + from;
-	g->n_nodes += !g->deps[from].exists;
-	g->n_nodes += !g->deps[to].exists;
+	struct Node *afrom = g->nodes + from;
+	g->n_nodes += !g->nodes[from].exists;
+	g->n_nodes += !g->nodes[to].exists;
 	adjlist_add(afrom, to);
-	g->deps[from].exists = 1;
-	g->deps[to].exists   = 1;
+	g->nodes[from].exists = 1;
+	g->nodes[to].exists   = 1;
 	return;
 }
 
@@ -106,7 +106,7 @@ graph_add_meta(
 	const char   *filename
 )
 {
-	struct Node *afrom = g->deps + at;
+	struct Node *afrom = g->nodes + at;
 
 	afrom->cmd = malloc_s((strlen(cmd) + 1) * sizeof(char));
 	strcpy(afrom->cmd, cmd);
@@ -139,10 +139,10 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 
 	while (h != t) {
 		size_t c = QUEUE_POP(queue, h, MAX_NODES);
-		graph_add_meta(dest, c, src->deps[c].cmd, src->deps[c].filename);
+		graph_add_meta(dest, c, src->nodes[c].cmd, src->nodes[c].filename);
 
-		for (size_t *n = src->deps[c].adj;
-		     n < src->deps[c].adj + src->deps[c].len;
+		for (size_t *n = src->nodes[c].adj;
+		     n < src->nodes[c].adj + src->nodes[c].len;
 		     n++) {
 
 			if (invert) {
@@ -180,8 +180,8 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 				leaves = realloc_s(leaves, sizeof(*leaves) * (n_leaves + 1));
 			}
 
-			for (size_t *n = src->deps[c].adj;
-			     n < src->deps[c].adj + src->deps[c].len;
+			for (size_t *n = src->nodes[c].adj;
+			     n < src->nodes[c].adj + src->nodes[c].len;
 			     n++) {
 				if (!visited[*n]) {
 					visited[*n] = true;
@@ -208,18 +208,18 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 		while (h != t) {
 			size_t c = QUEUE_POP(queue, h, MAX_NODES);
 			// Copy metadata over
-			graph_add_meta(dest, c, src->deps[c].cmd, src->deps[c].filename);
+			graph_add_meta(dest, c, src->nodes[c].cmd, src->nodes[c].filename);
 
 			// Read dep mtime
 			struct stat csb;
-			int         csr = stat(inv.deps[c].filename, &csb);
+			int         csr = stat(inv.nodes[c].filename, &csb);
 
-			for (size_t *n = inv.deps[c].adj;
-			     n < inv.deps[c].adj + inv.deps[c].len;
+			for (size_t *n = inv.nodes[c].adj;
+			     n < inv.nodes[c].adj + inv.nodes[c].len;
 			     n++) {
 				// Read codep mtime
 				struct stat sb;
-				int         sr = stat(inv.deps[*n].filename, &sb);
+				int         sr = stat(inv.nodes[*n].filename, &sb);
 
 				// Codep needs to be updated if dep was modified
 				// at a later or equal time. If dep needs to be
@@ -260,7 +260,7 @@ struct __vec {
 static void toposort(struct Graph *g, size_t c, struct __vec *tsorted, char *visited)
 {
 	// Enqueue dependencies
-	for (size_t *n = g->deps[c].adj; n < g->deps[c].adj + g->deps[c].len;
+	for (size_t *n = g->nodes[c].adj; n < g->nodes[c].adj + g->nodes[c].len;
 			n++) {
 		if (!visited[*n]) {
 			visited[*n] = true;
@@ -333,8 +333,8 @@ graph_execute(struct Graph *g, int max_childs)
 
 			// Check if all dependencies are satisfied
 			bool deps_sat = true;
-			for (size_t *d = g->deps[*c].adj;
-			     d < g->deps[*c].adj + g->deps[*c].len;
+			for (size_t *d = g->nodes[*c].adj;
+			     d < g->nodes[*c].adj + g->nodes[*c].len;
 			     d++) {
 				deps_sat &= (processed[*d] == 2);
 			}
@@ -346,7 +346,7 @@ graph_execute(struct Graph *g, int max_childs)
 				// Fork and run command
 				if (!fork()) {
 					processed[*c] = 1;
-					system(g->deps[*c].cmd);
+					system(g->nodes[*c].cmd);
 					processed[*c] = 2;
 					(*n_childs)--;
 					sem_post(plock);
