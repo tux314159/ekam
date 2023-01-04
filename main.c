@@ -16,8 +16,8 @@ main(int argc, char **argv)
     ADD_INITIAL(&g, 5, "echo at 5; sleep 1.0; touch test/5", "test/5");
     ADD_TARGET(&g, 6, "echo at 6; sleep 1.0; touch test/6", "test/6", 2, 8, 9);
     ADD_TARGET(&g, 7, "echo at 7; sleep 1.0; touch test/7", "test/7", 1, 10, 6);
-    ADD_TARGET(&g, 8, "echo at 8; sleep 1.0; touch test/8", "test/8", 5);
-    ADD_TARGET(&g, 9, "echo at 9; sleep 1.0; touch test/9", "test/9", 5);
+    ADD_TARGET(&g, 8, "echo at 8; sleep 1.0; touch test/8", "test/8", 3);
+    ADD_TARGET(&g, 9, "echo at 9; sleep 1.0; touch test/9", "test/9", 3);
 
 	graph_buildpartial(&g, &pg, 7);
 	graph_execute(&pg, argc == 1 ? 1 : atoi(argv[1]));

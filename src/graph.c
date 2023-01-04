@@ -161,28 +161,59 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 	return;
 }
 
+struct __vec {
+	size_t sz;
+	size_t *arr;
+};
+#define VEC_PB(vec, x) do {                  \
+	(vec).arr[(vec).sz++] = x;               \
+	(vec).arr = realloc_s(                   \
+		(vec).arr,                           \
+		sizeof(*(vec).arr) * ((vec).sz + 1)  \
+	);                                       \
+} while (0);
+
 void
 graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 {
-	// BFS on source to find leaves.
-	size_t *leaves   = malloc_s(sizeof(*leaves));
-	size_t  n_leaves = 0;
+	// BFS on source to find every vertex in direct need
+	// of updating reachable from start.
+	struct __vec needupd;
+	needupd.arr = calloc(1, sizeof(*needupd.arr));
+	needupd.sz  = 0;
 	{
 		BFS_BEGIN(queue, MAX_NODES, h, t, visited, start);
 		while (h != t) {
 			size_t c = QUEUE_POP(queue, h, MAX_NODES);
-			if (src->nodes[c].len == 0) { // no deps, i.e. leaf
-				leaves[n_leaves++] = c;
-				leaves = realloc_s(leaves, sizeof(*leaves) * (n_leaves + 1));
-			}
+			struct Node c_nde = src->nodes[c];
 
-			for (size_t *n = src->nodes[c].adj;
-			     n < src->nodes[c].adj + src->nodes[c].len;
-			     n++) {
-				if (!visited[*n]) {
-					visited[*n] = true;
-					QUEUE_PUSH(queue, t, MAX_NODES, *n);
-				}
+			// Read mtime
+			struct stat csb;
+			int csr = stat(c_nde.filename, &csb);
+
+			// If we do not exist, we definitely need some updating.
+			if (csr == -1)
+				VEC_PB(needupd, c);
+
+			for (size_t *n = c_nde.adj; n < c_nde.adj + c_nde.len; n++) {
+				// We want every pair, so we do this before visited check;
+				// at most we get one duplicate (I think) (I hope)
+				struct stat nsb;
+				int nsr = stat(src->nodes[*n].filename, &nsb);
+
+				// We need to be updated if our direct dependency needs it.
+				// If it does not exist, it will exist, and therefore we will
+				// be reached later on anyway, so no need to push ourselves.
+				if (nsr != -1)
+					if (nsb.st_mtim.tv_sec > csb.st_mtim.tv_sec ||
+						(nsb.st_mtim.tv_sec == csb.st_mtim.tv_sec &&
+						 nsb.st_mtim.tv_nsec >= csb.st_mtim.tv_nsec))
+						VEC_PB(needupd, *n);
+				
+				if(visited[*n])
+					continue;
+				visited[*n] = 1;
+				QUEUE_PUSH(queue, t, MAX_NODES, *n);
 			}
 		}
 	}
@@ -191,72 +222,43 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 	struct Graph inv = graph_make();
 	_bfs_copy(src, &inv, start, true);
 
-	// BFS, on inverted graph, read mtimes, check if node needs
-	// to be updated.
-	char needupd[MAX_NODES];
-	memset(needupd, false, MAX_NODES);
+	// Do multisource BFS with nodes needing update as starting points
+	// and therefore construct dest.
 	{
 		BFS_BEGIN(queue, MAX_NODES, h, t, visited, 0);
 
-		// Push all leaves into the queue first - we want to simulate a
-		// node on top of all of these.
-		memcpy(queue, leaves, n_leaves * sizeof(*leaves));
-		for (size_t i = 0; i < n_leaves; i++)
-			visited[leaves[i]] = true;
-		t = n_leaves;
+		memcpy(queue, needupd.arr, needupd.sz * sizeof(*needupd.arr));
+		for (size_t i = 0; i < needupd.sz; i++)
+			visited[needupd.arr[i]] = true;
+		t = needupd.sz;
 
 		while (h != t) {
 			size_t c = QUEUE_POP(queue, h, MAX_NODES);
+			struct Node c_nde = inv.nodes[c];
 			// Copy metadata over
 			graph_add_meta(dest, c, src->nodes[c].cmd, src->nodes[c].filename);
 
-			// Read dep mtime
-			struct stat csb;
-			int         csr = stat(inv.nodes[c].filename, &csb);
-
-			for (size_t *n = inv.nodes[c].adj;
-			     n < inv.nodes[c].adj + inv.nodes[c].len;
-			     n++) {
-				// Read codep mtime
-				struct stat sb;
-				int         sr = stat(inv.nodes[*n].filename, &sb);
-
-				if (c)
-					// Codep needs to be updated if dep was modified
-					// at a later or equal time. If dep needs to be
-					// updated so does codep.
-					needupd[*n] = needupd[*n] || needupd[c] || sr == -1 ||
-								 csr == -1 ||
-								 csb.st_mtim.tv_sec > sb.st_mtim.tv_sec ||
-								 (csb.st_mtim.tv_sec == sb.st_mtim.tv_sec &&
-								  csb.st_mtim.tv_nsec >= sb.st_mtim.tv_nsec);
-				if (needupd[*n]) {
-					debugpf("%ld nodes initially", dest->n_nodes);
-					graph_add_edge(dest, *n, c); // add to dest (uninvert graph)
-					debugpf("%ld nodes after adding edge from %ld to %ld", dest->n_nodes, *n, c);
-				}
+			for (size_t *n = c_nde.adj; n < c_nde.adj + c_nde.len; n++) {
+				graph_add_edge(dest, *n, c); // add to dest (uninvert graph)
+				if (visited[*n])
+					continue;
+				visited[*n] = true;
 
 				QUEUE_PUSH(queue, t, MAX_NODES, *n);
 			}
 		}
 	}
 	graph_add_edge(dest, 0, start); // 0 node
-	debugpf("%ld nodes", dest->n_nodes);
 
-	free(leaves);
+	free(needupd.arr);
 	return;
 }
-
-struct __vec {
-	size_t sz;
-	size_t *arr;
-};
 
 static void toposort(struct Graph *g, size_t c, struct __vec *tsorted, char *visited)
 {
 	// Enqueue dependencies
-	for (size_t *n = g->nodes[c].adj; n < g->nodes[c].adj + g->nodes[c].len;
-			n++) {
+	struct Node g_nde = g->nodes[c];
+	for (size_t *n = g_nde.adj; n < g_nde.adj + g_nde.len; n++) {
 		if (!visited[*n]) {
 			visited[*n] = true;
 			toposort(g, *n, tsorted, visited);
@@ -278,7 +280,7 @@ graph_execute(struct Graph *g, int max_childs)
 	toposort(g, 0, &tsorted_s, visited);
 	size_t *tsorted = tsorted_s.arr;
 
-	// Reverse toposorted array - it was actually done in reverse
+	// Reverse toposorted array - since graph is reversed.
 	for (size_t i = 0; i < g->n_nodes / 2; i++) {
 		size_t tmp                  = tsorted[i];
 		tsorted[i]                  = tsorted[g->n_nodes - i - 1];
@@ -288,19 +290,17 @@ graph_execute(struct Graph *g, int max_childs)
 	// Time to finally start executing shit!
 
 	// Set up shm
-	// XXX: is this portable? Will sem_t ever be smaller than int?
-	const size_t shm_sz = sizeof(int) + (sizeof(sem_t) - sizeof(int)) +
-	                      sizeof(sem_t) + sizeof(int) * MAX_NODES;
-	int   zero_fd = open("/dev/zero", O_RDWR);
-	void *mem =
-		mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, zero_fd, 0);
-	int *n_childs = mem;
-	*n_childs     = 0;
+	const size_t shm_sz = sizeof(sem_t) + sizeof(int) + sizeof(int) * MAX_NODES;
+	int   zero_fd       = open("/dev/zero", O_RDWR);
+	void *mem           = mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, zero_fd, 0);
 
-	sem_t *plock = (sem_t *)mem + 1; // Accounted for in the offset
+	sem_t *plock = mem;
 	sem_init(plock, 1, (unsigned)max_childs);
 
-	int *processed = (int *)((sem_t *)mem + 2);
+	int *n_childs = (int *)((sem_t *)mem + 1);
+	*n_childs     = 0;
+
+	int *processed = (int *)((sem_t *)mem + 1) + 1;
 	memset(processed, 0, sizeof(int) * MAX_NODES);
 
 	size_t cnt = 0;
@@ -312,7 +312,6 @@ graph_execute(struct Graph *g, int max_childs)
 		sem_wait(plock);
 		sem_getvalue(plock, &val);
 
-		debugpf("%ld out of %ld nodes processed", cnt, g->n_nodes);
 		if (cnt == g->n_nodes) {
 			// Processed all nodes, we are done
 			break;
