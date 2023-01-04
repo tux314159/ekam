@@ -192,8 +192,9 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 			int csr = stat(c_nde.filename, &csb);
 
 			// If we do not exist, we definitely need some updating.
-			if (csr == -1)
+			if (csr == -1) {
 				VEC_PB(needupd, c);
+			}
 
 			for (size_t *n = c_nde.adj; n < c_nde.adj + c_nde.len; n++) {
 				// We want every pair, so we do this before visited check;
@@ -204,14 +205,17 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 				// We need to be updated if our direct dependency needs it.
 				// If it does not exist, it will exist, and therefore we will
 				// be reached later on anyway, so no need to push ourselves.
-				if (nsr != -1)
+				if (nsr != -1) {
 					if (nsb.st_mtim.tv_sec > csb.st_mtim.tv_sec ||
 						(nsb.st_mtim.tv_sec == csb.st_mtim.tv_sec &&
-						 nsb.st_mtim.tv_nsec >= csb.st_mtim.tv_nsec))
+						 nsb.st_mtim.tv_nsec >= csb.st_mtim.tv_nsec)) {
 						VEC_PB(needupd, *n);
+					}
+				}
 				
-				if(visited[*n])
+				if(visited[*n]) {
 					continue;
+				}
 				visited[*n] = 1;
 				QUEUE_PUSH(queue, t, MAX_NODES, *n);
 			}
@@ -240,8 +244,9 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 
 			for (size_t *n = c_nde.adj; n < c_nde.adj + c_nde.len; n++) {
 				graph_add_edge(dest, *n, c); // add to dest (uninvert graph)
-				if (visited[*n])
+				if (visited[*n]) {
 					continue;
+				}
 				visited[*n] = true;
 
 				QUEUE_PUSH(queue, t, MAX_NODES, *n);
