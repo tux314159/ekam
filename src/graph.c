@@ -13,6 +13,7 @@
 #include <unistd.h>
 #include <util/debug.h>
 
+#include "datastructs.h"
 #include "graph.h"
 #include "safealloc.h"
 
@@ -49,7 +50,7 @@ struct Graph
 graph_make(void)
 {
 	return (struct Graph){
-		.nodes    = calloc_s(MAX_NODES, sizeof(struct Node)),
+		.nodes   = calloc_s(MAX_NODES, sizeof(struct Node)),
 		.n_nodes = 0,
 	};
 }
@@ -161,59 +162,46 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 	return;
 }
 
-struct __vec {
-	size_t sz;
-	size_t *arr;
-};
-#define VEC_PB(vec, x) do {                  \
-	(vec).arr[(vec).sz++] = x;               \
-	(vec).arr = realloc_s(                   \
-		(vec).arr,                           \
-		sizeof(*(vec).arr) * ((vec).sz + 1)  \
-	);                                       \
-} while (0);
-
 void
 graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 {
 	// BFS on source to find every vertex in direct need
 	// of updating reachable from start.
-	struct __vec needupd;
-	needupd.arr = calloc(1, sizeof(*needupd.arr));
-	needupd.sz  = 0;
+	struct Vec_size_t needupd;
+	VEC_INIT(needupd);
 	{
 		BFS_BEGIN(queue, MAX_NODES, h, t, visited, start);
 		while (h != t) {
-			size_t c = QUEUE_POP(queue, h, MAX_NODES);
+			size_t      c     = QUEUE_POP(queue, h, MAX_NODES);
 			struct Node c_nde = src->nodes[c];
 
 			// Read mtime
 			struct stat csb;
-			int csr = stat(c_nde.filename, &csb);
+			int         csr = stat(c_nde.filename, &csb);
 
 			// If we do not exist, we definitely need some updating.
 			if (csr == -1) {
-				VEC_PB(needupd, c);
+				VEC_PUSH(needupd, c);
 			}
 
 			for (size_t *n = c_nde.adj; n < c_nde.adj + c_nde.len; n++) {
 				// We want every pair, so we do this before visited check;
 				// at most we get one duplicate (I think) (I hope)
 				struct stat nsb;
-				int nsr = stat(src->nodes[*n].filename, &nsb);
+				int         nsr = stat(src->nodes[*n].filename, &nsb);
 
 				// We need to be updated if our direct dependency needs it.
 				// If it does not exist, it will exist, and therefore we will
 				// be reached later on anyway, so no need to push ourselves.
 				if (nsr != -1) {
 					if (nsb.st_mtim.tv_sec > csb.st_mtim.tv_sec ||
-						(nsb.st_mtim.tv_sec == csb.st_mtim.tv_sec &&
-						 nsb.st_mtim.tv_nsec >= csb.st_mtim.tv_nsec)) {
-						VEC_PB(needupd, *n);
+					    (nsb.st_mtim.tv_sec == csb.st_mtim.tv_sec &&
+					     nsb.st_mtim.tv_nsec >= csb.st_mtim.tv_nsec)) {
+						VEC_PUSH(needupd, *n);
 					}
 				}
-				
-				if(visited[*n]) {
+
+				if (visited[*n]) {
 					continue;
 				}
 				visited[*n] = 1;
@@ -237,7 +225,7 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 		t = needupd.sz;
 
 		while (h != t) {
-			size_t c = QUEUE_POP(queue, h, MAX_NODES);
+			size_t      c     = QUEUE_POP(queue, h, MAX_NODES);
 			struct Node c_nde = inv.nodes[c];
 			// Copy metadata over
 			graph_add_meta(dest, c, src->nodes[c].cmd, src->nodes[c].filename);
@@ -259,7 +247,8 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 	return;
 }
 
-static void toposort(struct Graph *g, size_t c, struct __vec *tsorted, char *visited)
+static void
+toposort(struct Graph *g, size_t c, struct Vec_size_t *tsorted, char *visited)
 {
 	// Enqueue dependencies
 	struct Node g_nde = g->nodes[c];
@@ -269,16 +258,15 @@ static void toposort(struct Graph *g, size_t c, struct __vec *tsorted, char *vis
 			toposort(g, *n, tsorted, visited);
 		}
 	}
-	tsorted->arr[tsorted->sz++] = c;
+	VEC_PUSH(*tsorted, c);
 }
 
 void
 graph_execute(struct Graph *g, int max_childs)
 {
 	// DFS toposort
-	struct __vec tsorted_s;
-	tsorted_s.sz = 0;
-	tsorted_s.arr = calloc(MAX_NODES, sizeof(*tsorted_s.arr));
+	struct Vec_size_t tsorted_s;
+	VEC_INIT(tsorted_s);
 	char visited[MAX_NODES];
 	memset(visited, 0, MAX_NODES);
 	visited[0] = 1;
@@ -296,8 +284,9 @@ graph_execute(struct Graph *g, int max_childs)
 
 	// Set up shm
 	const size_t shm_sz = sizeof(sem_t) + sizeof(int) + sizeof(int) * MAX_NODES;
-	int   zero_fd       = open("/dev/zero", O_RDWR);
-	void *mem           = mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, zero_fd, 0);
+	int          zero_fd = open("/dev/zero", O_RDWR);
+	void        *mem =
+		mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, zero_fd, 0);
 
 	sem_t *plock = mem;
 	sem_init(plock, 1, (unsigned)max_childs);
@@ -357,5 +346,5 @@ graph_execute(struct Graph *g, int max_childs)
 	}
 	sem_destroy(plock);
 	munmap(mem, shm_sz);
-	free(tsorted);
+	VEC_KILL(tsorted_s);
 }
