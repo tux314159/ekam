@@ -13,9 +13,9 @@
 #include <unistd.h>
 #include <util/debug.h>
 
-#include "datastructs.h"
 #include "graph.h"
 #include "safealloc.h"
+#include "vector.h"
 
 // We're doing BFS everywhere - why not macro?
 #define BFS_BEGIN(                                                \
