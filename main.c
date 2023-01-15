@@ -5,8 +5,6 @@
 #include "graph.h"
 #include "hashtable.h"
 
-MAKE_HT_T(int)
-
 int
 main(int argc, char **argv)
 {
@@ -35,6 +33,11 @@ main(int argc, char **argv)
 		*ht_get_int(ht, "miao"),
 		(void*)ht_get_int(ht, "boo")
 	);
+	printf("Iterating hashtable: ");
+	HT_ITER(ht, p, int) {
+		printf("%s: %d; ", p->key, p->data);
+	}
+	printf("\n");
 	ht_destroy_int(ht);
 
 	graph_buildpartial(&g, &pg, 7);

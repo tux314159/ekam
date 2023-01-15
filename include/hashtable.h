@@ -2,6 +2,7 @@
 #define INCLUDE_HASHTABLE_H
 
 #include "safealloc.h"
+#include "vector.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -11,7 +12,8 @@
  * However I think it works well enough.
  */
 
-unsigned long ht_hash(const char *str);
+unsigned long
+ht_hash(const char *str);
 
 unsigned long
 ht_hash(const char *str)
@@ -32,12 +34,16 @@ ht_hash(const char *str)
 		struct HT_entry_##T *next;                                            \
 		char                *key;                                             \
 		T                    data;                                            \
+		struct HT_entry_##T *iter_next;                                       \
 	} HT_entry_##T;                                                           \
                                                                               \
 	typedef struct Hashtable_##T {                                            \
 		struct HT_entry_##T *entries;                                         \
 		size_t               size;                                            \
 		size_t               n_buckets;                                       \
+		struct HT_entry_##T *iter_begin;                                      \
+		struct HT_entry_##T *iter_end;                                        \
+		struct HT_entry_##T iter_dummy;                                       \
 	} Hashtable_##T;                                                          \
                                                                               \
 	Hashtable_##T *ht_create_##T(size_t size);                                \
@@ -51,6 +57,8 @@ ht_hash(const char *str)
 		ht->entries       = calloc_s(size, sizeof(*(ht->entries)));           \
 		ht->size          = 0;                                                \
 		ht->n_buckets     = size;                                             \
+		ht->iter_begin    = NULL;                                             \
+		ht->iter_end      = NULL;                                             \
 		return ht;                                                            \
 	}                                                                         \
                                                                               \
@@ -83,6 +91,13 @@ ht_hash(const char *str)
 		p->key  = malloc(sizeof(*key) * strlen(key));                         \
 		strcpy(p->key, key);                                                  \
 		p->data = data;                                                       \
+        p->iter_next = &ht->iter_dummy;                                       \
+		if (ht->iter_begin) {                                                 \
+			ht->iter_end->iter_next = p;                                      \
+		} else {                                                              \
+			ht->iter_begin = p;                                               \
+		}                                                                     \
+		ht->iter_end = p;                                                     \
 		ht->size++;                                                           \
 	}                                                                         \
                                                                               \
@@ -98,5 +113,10 @@ ht_hash(const char *str)
 		}                                                                     \
 		return NULL;                                                          \
 	}
+
+#define HT_ITER(ht, pname, T) \
+	for (HT_entry_##T *p = ht->iter_begin; p->iter_next; p = p->iter_next)
+
+MAKE_HT_T(int)
 
 #endif
