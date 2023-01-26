@@ -28,29 +28,35 @@ static void rb_balance(Redblack *inserted)
 	}
 	char unclecol = uncle ? uncle->col : 0;
 
-	// Parent and uncle are red.
 	if (inserted->parent->col && unclecol) {
+		// Parent and uncle are red.
 		parent->parent->col = 1;
 		parent->col = 0;
 		if (uncle) {
 			uncle->col = 0;
 		}
 		rb_balance(parent->parent);
-	}
-	// Parent red, uncle black, we are right child.
-	if (parent->col && !unclecol && parent->r == inserted) {
-		// Left-rotation.
+	} else if (parent->col && !unclecol && parent->r == inserted) {
+		// Parent red, uncle black, we are right child.
+		// Left-rotation around parent.
 		*gppptr = inserted;
 		inserted->parent = parent->parent;
 
-		if (inserted->l) {
-			inserted->l->parent = parent;
-		}
 		parent->r = inserted->l;
+		if (inserted->l) {
+			parent->l = inserted->l;
+			inserted->l->parent = parent;
+		} else {
+			parent->l = NULL;
+		}
 
-		parent->parent = inserted;
 		inserted->l = parent;
+		parent->parent = inserted;
+	} else {
+		// Parent red, grandparent black, we are left child.
+		// Right-rotation around grandparent.
 	}
+	
 }
 
 void rb_insert(Redblack *tree, long val)
