@@ -36,7 +36,7 @@ main(int argc, char **argv)
 		R(test/5)
 	);
 	__(test/3,
-			echo at 3; sleep 1.0; touch test/3
+		echo at 3; sleep 1.0; touch test/3
 	);
 	_(test/4,
 		echo at 4; sleep 1.0; touch test/4,
