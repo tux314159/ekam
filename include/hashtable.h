@@ -56,7 +56,7 @@ ht_hash(const char *str)
                                                                               \
 	Hashtable_##T *ht_create_##T(size_t size)                                 \
 	{                                                                         \
-		Hashtable_##T *ht = malloc(sizeof(*ht));                              \
+		Hashtable_##T *ht = malloc_(sizeof(*ht));                             \
 		ht->entries       = calloc_s(size, sizeof(*(ht->entries)));           \
 		ht->size          = 0;                                                \
 		ht->n_buckets     = size;                                             \
@@ -87,13 +87,13 @@ ht_hash(const char *str)
 	void ht_insert_##T(Hashtable_##T *ht, const char *key, T data)            \
 	{                                                                         \
 		unsigned long hash = ht_hash(key) % ht->n_buckets;                    \
-		HT_entry_##T *nent = calloc(1, sizeof(*nent));                        \
+		HT_entry_##T *nent = calloc_s(1, sizeof(*nent));                      \
 		HT_entry_##T *p    = ht->entries + hash;                              \
 		while (p->next) {                                                     \
 			p = p->next;                                                      \
 		}                                                                     \
 		p->next = nent;                                                       \
-		p->key  = malloc(sizeof(*key) * (strlen(key) + 1));                   \
+		p->key  = malloc_(sizeof(*key) * (strlen(key) + 1));                  \
 		strcpy(p->key, key);                                                  \
 		p->data      = data;                                                  \
 		p->iter_next = &ht->iter_dummy;                                       \
