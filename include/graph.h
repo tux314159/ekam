@@ -5,10 +5,10 @@
 #include <sys/types.h>
 
 // absolute maximum number of nodes
-#define MAX_NODES 1000000
+#define MAX_NODES 100000
 // max size of map in each adjlist; larger sizes will
 // make it faster but take more memory.
-#define ADJLIST_MAP_SZ 1024
+#define ADJLIST_MAP_SZ 65536
 
 struct Node {
 	size_t *adj;
@@ -84,21 +84,5 @@ graph_buildpartial(
  */
 void
 graph_execute(struct Graph *g, int max_childs);
-
-/*
- * Some convenient macros
- */
-
-#define ADD_TARGET(g, targ, cmd, filename, ...)           \
-	graph_add_target(                                     \
-		g,                                                \
-		targ,                                             \
-		(size_t[]){__VA_ARGS__},                          \
-		sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
-		cmd,                                              \
-        filename                                          \
-	);
-
-#define ADD_INITIAL(g, targ, cmd, filename) graph_add_target(g, targ, NULL, 0, cmd, filename);
 
 #endif

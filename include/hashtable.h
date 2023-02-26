@@ -62,6 +62,8 @@ ht_hash(const char *str)
 		ht->n_buckets     = size;                                             \
 		ht->iter_begin    = NULL;                                             \
 		ht->iter_end      = NULL;                                             \
+		ht->iter_dummy =                                                      \
+			(HT_entry_##T){.next = NULL, .key = NULL, .iter_next = NULL};     \
 		return ht;                                                            \
 	}                                                                         \
                                                                               \
@@ -91,7 +93,7 @@ ht_hash(const char *str)
 			p = p->next;                                                      \
 		}                                                                     \
 		p->next = nent;                                                       \
-		p->key  = malloc(sizeof(*key) * strlen(key));                         \
+		p->key  = malloc(sizeof(*key) * (strlen(key) + 1));                   \
 		strcpy(p->key, key);                                                  \
 		p->data      = data;                                                  \
 		p->iter_next = &ht->iter_dummy;                                       \
@@ -121,5 +123,6 @@ ht_hash(const char *str)
 	for (HT_entry_##T *p = ht->iter_begin; p->iter_next; p = p->iter_next)
 
 MAKE_HT_T(int)
+MAKE_HT_T(size_t)
 
 #endif
