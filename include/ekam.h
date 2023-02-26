@@ -8,6 +8,8 @@
 
 // GENERAL-PURPOSE MACROS
 
+#define Q(x) #x
+
 // INIT STUFF
 #define INIT_EKAM()                                                       \
 	struct Graph      _main_graph     = graph_make();                     \
@@ -16,27 +18,42 @@
 	size_t            _main_cnt       = 1;
 
 // GRAPH CONVENIENCE MACROS
-#define ADD_TARGET(cmd, filename, ...)                                   \
-	do {                                                                 \
-		graph_add_target(                                                \
-			&_main_graph,                                                \
-			_main_cnt++,                                                 \
-			(size_t[]){__VA_ARGS__},                                                     \
-			sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t),            \
-			cmd,                                                         \
-			filename                                                     \
-		);                                                               \
-		ht_insert_size_t(_main_ht, filename, _main_cnt);                 \
+
+// Resolve a target name.
+#define R(x) *ht_get_size_t(_main_ht, Q(x))
+
+// We require all targets to be forward-declared.
+#define DECLARE(target) ht_insert_size_t(_main_ht, Q(target), _main_cnt++);
+
+// Define a target.
+#define _(filename, cmd, ...)                                 \
+	do {                                                      \
+		graph_add_target(                                     \
+			&_main_graph,                                     \
+			R(filename),                                      \
+			(size_t[]){__VA_ARGS__},                          \
+			sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
+			Q(cmd),                                           \
+			Q(filename)                                       \
+		);                                                    \
 	} while (0)
 
-#define ADD_INITIAL(cmd, filename)                                           \
-	do {                                                                     \
-		graph_add_target(&_main_graph, _main_cnt++, NULL, 0, cmd, filename); \
+// Ugly; define a target with no dependencies.
+#define __(filename, cmd) \
+	do {                  \
+		graph_add_target( \
+			&_main_graph, \
+			R(filename),  \
+			NULL,         \
+			0,            \
+			Q(cmd),       \
+			Q(filename)   \
+		);                \
 	} while (0)
 
 #define BUILD_TARGET(targ)                                              \
 	do {                                                                \
-		graph_buildpartial(&_main_graph, &_main_partgraph, targ);       \
+		graph_buildpartial(&_main_graph, &_main_partgraph, R(targ));    \
 		graph_execute(&_main_partgraph, argc == 1 ? 1 : atoi(argv[1])); \
 	} while (0)
 
