@@ -4,7 +4,11 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
-#define MAX_NODES 1024
+// absolute maximum number of nodes
+#define MAX_NODES 1000000
+// max size of map in each adjlist; larger sizes will
+// make it faster but take more memory.
+#define ADJLIST_MAP_SZ 1024
 
 struct Node {
 	size_t *adj;

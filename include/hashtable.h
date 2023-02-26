@@ -38,12 +38,15 @@ ht_hash(const char *str)
 	} HT_entry_##T;                                                           \
                                                                               \
 	typedef struct Hashtable_##T {                                            \
+		/* since this is a hash table it is likely that data will be stored   \
+		 * in the first bucket. To optimise for this case we will store all   \
+		 * first elements in sequential memory. */                            \
 		struct HT_entry_##T *entries;                                         \
 		size_t               size;                                            \
 		size_t               n_buckets;                                       \
 		struct HT_entry_##T *iter_begin;                                      \
 		struct HT_entry_##T *iter_end;                                        \
-		struct HT_entry_##T iter_dummy;                                       \
+		struct HT_entry_##T  iter_dummy;                                      \
 	} Hashtable_##T;                                                          \
                                                                               \
 	Hashtable_##T *ht_create_##T(size_t size);                                \
@@ -90,8 +93,8 @@ ht_hash(const char *str)
 		p->next = nent;                                                       \
 		p->key  = malloc(sizeof(*key) * strlen(key));                         \
 		strcpy(p->key, key);                                                  \
-		p->data = data;                                                       \
-        p->iter_next = &ht->iter_dummy;                                       \
+		p->data      = data;                                                  \
+		p->iter_next = &ht->iter_dummy;                                       \
 		if (ht->iter_begin) {                                                 \
 			ht->iter_end->iter_next = p;                                      \
 		} else {                                                              \
