@@ -2,67 +2,49 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "graph.h"
-#include "hashtable.h"
 #include "ekam.h"
+
+#define DECLARE_C(base)              \
+	DECLARE_("src/" #base ".c");     \
+	DECLARE_("include/" #base ".h"); \
+	ID_("src/" #base ".c");          \
+	ID_("include/" #base ".h");      \
+	DECLARE_("build/" #base ".o");
+
+// clang-format off
+#define CFLAGS       -Iinclude
+#define CC(in, out)  gcc CFLAGS -o out in
+#define OCC(in, out) gcc CFLAGS -c -o out in
+// clang-format on
+#define ID_(in)     D0_(in, "")
+#define ID(in)      ID_(Q(in))
 
 int
 main(int argc, char **argv)
 {
 	INIT_EKAM();
 
-	DECLARE(test/1)
-	DECLARE(test/2)
-	DECLARE(test/3)
-	DECLARE(test/4)
-	DECLARE(test/5)
-	DECLARE(test/6)
-	DECLARE(test/7)
-	DECLARE(test/8)
-	DECLARE(test/9)
-	DECLARE(test/10)
-
 	// clang-format off
-	D(test/10,
-		echo at 10; sleep 1.0; touch test/10,
-		R(test/2), R(test/3)
-	);
-	D(test/1,
-		echo at 1; sleep 1.0; touch test/1,
-		R(test/3), R(test/4)
-	);
-	D(test/2,
-		echo at 2; sleep 1.0; touch test/2,
-		R(test/5)
-	);
-	D0(test/3,
-		echo at 3; sleep 1.0; touch test/3
-	);
-	D(test/4,
-		echo at 4; sleep 1.0; touch test/4,
-		R(test/5)
-	);
-	D0(test/5,
-		echo at 5; sleep 1.0; touch test/5
-	);
-	D(test/6,
-		echo at 6; sleep 1.0; touch test/6,
-		R(test/2), R(test/8), R(test/9)
-	);
-	D(test/7,
-		echo at 7; sleep 1.0; touch test/7,
-		R(test/1), R(test/10), R(test/6)
-	);
-	D(test/8,
-		echo at 8; sleep 1.0; touch test/8,
-		R(test/3)
-	);
-	D(test/9,
-		echo at 9; sleep 1.0; touch test/9,
-		R(test/3)
-	);
+	DECLARE_C(graph);
+	DECLARE_C(safealloc);
+	DECLARE(include/ekam.h);
+	DECLARE(main.c);
+	DECLARE(build/main);
+
+	ID(include/ekam.h);
+	ID(main.c);
+
+	D(build/graph.o,
+		OCC(build/graph.c, src/graph.o),
+		R(src/graph.c), R(include/graph.h));
+	D(build/safealloc.o,
+		OCC(build/safealloc.c, src/safealloc.o),
+		R(src/safealloc.c), R(include/safealloc.h));
+	D(build/main,
+		CC(main.c, build/main),
+		R(main.c), R(include/ekam.h), R(build/graph.o), R(build/safealloc.o));
 	// clang-format on
 
-	BUILD_TARGET(test/7);
+	BUILD_TARGET(build/main);
 	FREE_EKAM();
 }

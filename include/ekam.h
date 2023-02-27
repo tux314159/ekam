@@ -32,7 +32,7 @@
 
 // (R)esolve a target name.
 #define R_(x) *ht_get_size_t(_main_ht, x)
-#define R(x)  R_(Q(X))
+#define R(x)  R_(Q(x))
 
 // We require all targets to be forward-declared.
 #define DECLARE_(target) ht_insert_size_t(_main_ht, target, _main_cnt++);
