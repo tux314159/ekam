@@ -6,6 +6,6 @@ cflags=$(cat compile_flags.txt | tr '\n' ' ')
 
 echo "Building main"
 $CC $cflags -o _main -O2 $1 main.c src/*.c -lpthread -lrt
-echo "Rebuilding main with ourself"
+echo "Rebuilding main with ourselves"
 ./_main 8
 rm _main
