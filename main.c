@@ -12,12 +12,11 @@
 	DECLARE_("build/" #base ".o");
 
 // clang-format off
-#define CFLAGS       -Iinclude
-#define CC(in, out)  gcc CFLAGS -o out in
-#define OCC(in, out) gcc CFLAGS -c -o out in
-// clang-format on
-#define ID_(in)     D0_(in, "")
-#define ID(in)      ID_(Q(in))
+#define CFLAGS -Iinclude -O2
+#define CC(out) gcc CFLAGS -o out
+#define OCC(out) gcc CFLAGS -c -o out
+#define ID_(in) D0_(in, "")
+#define ID(in) ID_(Q(in))
 
 int
 main(int argc, char **argv)
@@ -35,13 +34,13 @@ main(int argc, char **argv)
 	ID(main.c);
 
 	D(build/graph.o,
-		OCC(build/graph.c, src/graph.o),
+		OCC(build/graph.o) src/graph.c,
 		R(src/graph.c), R(include/graph.h));
 	D(build/safealloc.o,
-		OCC(build/safealloc.c, src/safealloc.o),
+		OCC(build/safealloc.o) src/safealloc.c,
 		R(src/safealloc.c), R(include/safealloc.h));
 	D(build/main,
-		CC(main.c, build/main),
+		CC(build/main) main.c build/graph.o build/safealloc.o,
 		R(main.c), R(include/ekam.h), R(build/graph.o), R(build/safealloc.o));
 	// clang-format on
 

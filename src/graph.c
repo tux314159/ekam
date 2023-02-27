@@ -76,9 +76,12 @@ adjlist_add(struct Node *from, size_t to)
 {
 	// Naive linear search because yes
 	// Ensure no duplicates
-	for (size_t *c = from->adj; c < from->adj + from->len; c++) {
-		if (*c == to) {
-			return;
+	// I still don't know why not doing this is UB but ok
+	if (from->adj) {
+		for (size_t *c = from->adj; c < from->adj + from->len; c++) {
+			if (*c == to) {
+				return;
+			}
 		}
 	}
 	from->adj = realloc_s(from->adj, sizeof(*(from->adj)) * (from->len + 1));
@@ -127,6 +130,10 @@ graph_add_target(
 )
 {
 	graph_add_meta(g, target, cmd, filename);
+	// Heh apparently not doing this is UB
+	if (!deps) {
+		return;
+	}
 	for (size_t *d = deps; d < deps + n_deps; d++) {
 		graph_add_edge(g, target, *d);
 	}
@@ -141,6 +148,10 @@ _bfs_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert)
 	while (h != t) {
 		size_t c = QUEUE_POP(queue, h, MAX_NODES);
 		graph_add_meta(dest, c, src->nodes[c].cmd, src->nodes[c].filename);
+
+		if (!src->nodes[c].adj) {
+			continue;
+		}
 
 		for (size_t *n = src->nodes[c].adj;
 		     n < src->nodes[c].adj + src->nodes[c].len;
@@ -182,6 +193,10 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 			// If we do not exist, we definitely need some updating.
 			if (csr == -1) {
 				VEC_PUSH(needupd, c);
+			}
+
+			if (!c_nde.adj) {
+				continue;
 			}
 
 			for (size_t *n = c_nde.adj; n < c_nde.adj + c_nde.len; n++) {
@@ -230,6 +245,10 @@ graph_buildpartial(struct Graph *src, struct Graph *dest, size_t start)
 			// Copy metadata over
 			graph_add_meta(dest, c, src->nodes[c].cmd, src->nodes[c].filename);
 
+			if (!c_nde.adj){
+				continue;
+			}
+
 			for (size_t *n = c_nde.adj; n < c_nde.adj + c_nde.len; n++) {
 				graph_add_edge(dest, *n, c); // add to dest (uninvert graph)
 				if (visited[*n]) {
@@ -252,10 +271,12 @@ toposort(struct Graph *g, size_t c, struct Vec_size_t *tsorted, char *visited)
 {
 	// Enqueue dependencies
 	struct Node g_nde = g->nodes[c];
-	for (size_t *n = g_nde.adj; n < g_nde.adj + g_nde.len; n++) {
-		if (!visited[*n]) {
-			visited[*n] = true;
-			toposort(g, *n, tsorted, visited);
+	if (g_nde.adj) {
+		for (size_t *n = g_nde.adj; n < g_nde.adj + g_nde.len; n++) {
+			if (!visited[*n]) {
+				visited[*n] = true;
+				toposort(g, *n, tsorted, visited);
+			}
 		}
 	}
 	VEC_PUSH(*tsorted, c);
@@ -322,16 +343,22 @@ graph_execute(struct Graph *g, int max_childs)
 
 			// Check if all dependencies are satisfied
 			bool deps_sat = true;
-			for (size_t *d = g->nodes[*c].adj;
-			     d < g->nodes[*c].adj + g->nodes[*c].len;
-			     d++) {
-				deps_sat &= (processed[*d] == 2);
+			if (g->nodes[*c].adj) {
+				for (size_t *d = g->nodes[*c].adj;
+					 d < g->nodes[*c].adj + g->nodes[*c].len;
+					 d++) {
+					deps_sat &= (processed[*d] == 2);
+				}
 			}
 
 			if (deps_sat) {
 				(*n_childs)++;
 				processed[*c] = 1;
 				cnt++;
+				if (g->nodes[*c].cmd && g->nodes[*c].cmd[0]) {
+					// We don't wanna spam blank lines :p
+					printf("%s\n", g->nodes[*c].cmd);
+				}
 				// Fork and run command
 				if (!fork()) {
 					processed[*c] = 1;
