@@ -3,3 +3,4 @@ Session.vim
 main
 gmon.out
 ekam
+build/*
