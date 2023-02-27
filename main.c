@@ -29,6 +29,7 @@ main(int argc, char **argv)
 	DECLARE(include/ekam.h);
 	DECLARE(main.c);
 	DECLARE(build/main);
+	DECLARE(build);
 
 	ID(include/ekam.h);
 	ID(main.c);
@@ -44,6 +45,7 @@ main(int argc, char **argv)
 		R(main.c), R(include/ekam.h), R(build/graph.o), R(build/safealloc.o));
 	// clang-format on
 
+	system("mkdir -p build");
 	BUILD_TARGET(build/main);
 	FREE_EKAM();
 }
