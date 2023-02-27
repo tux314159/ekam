@@ -56,7 +56,7 @@ ht_hash(const char *str)
                                                                               \
 	Hashtable_##T *ht_create_##T(size_t size)                                 \
 	{                                                                         \
-		Hashtable_##T *ht = malloc_(sizeof(*ht));                             \
+		Hashtable_##T *ht = malloc_s(sizeof(*ht));                             \
 		ht->entries       = calloc_s(size, sizeof(*(ht->entries)));           \
 		ht->size          = 0;                                                \
 		ht->n_buckets     = size;                                             \
@@ -93,7 +93,7 @@ ht_hash(const char *str)
 			p = p->next;                                                      \
 		}                                                                     \
 		p->next = nent;                                                       \
-		p->key  = malloc_(sizeof(*key) * (strlen(key) + 1));                  \
+		p->key  = malloc_s(sizeof(*key) * (strlen(key) + 1));                  \
 		strcpy(p->key, key);                                                  \
 		p->data      = data;                                                  \
 		p->iter_next = &ht->iter_dummy;                                       \
