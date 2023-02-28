@@ -13,17 +13,26 @@
 
 // clang-format off
 #define CFLAGS -Iinclude -O2
-#define CC(out) gcc CFLAGS -o out
-#define OCC(out) gcc CFLAGS -c -o out
+
+#define CC_(out) "gcc " Q(CFLAGS) " -o " out " "
+#define CC(out) CC_(#out)
+
+#define OCC_(out) CC_(out) " -c "
+#define OCC(out) OCC_(#out)
+
 #define ID_(in) D0_(in, "")
-#define ID(in) ID_(Q(in))
+#define ID(in) ID_(#in)
+
+#define BUILD_COBJ(base)								     \
+	D_("build/" #base ".o",                                  \
+		OCC_("build/" #base ".o") "src/" #base ".c", \
+		R_("src/" #base ".c"), R_("include/" #base ".h"))
 
 int
 main(int argc, char **argv)
 {
 	INIT_EKAM();
 
-	// clang-format off
 	DECLARE_C(safealloc);
 	DECLARE_C(graph);
 	DECLARE_C(build);
@@ -35,19 +44,15 @@ main(int argc, char **argv)
 	ID(include/ekam.h);
 	ID(main.c);
 
-	D(build/graph.o,
-		OCC(build/graph.o) src/graph.c,
-		R(src/graph.c), R(include/graph.h));
-	D(build/build.o,
-		OCC(build/build.o) src/build.c,
-		R(src/build.c), R(include/build.h));
-	D(build/safealloc.o,
-		OCC(build/safealloc.o) src/safealloc.c,
-		R(src/safealloc.c), R(include/safealloc.h));
-	D(build/main,
-		CC(build/main) main.c build/graph.o build/safealloc.o build/build.o,
-		R(main.c), R(include/ekam.h), R(build/graph.o), R(build/safealloc.o), R(build/build.o));
-	// clang-format on
+	BUILD_COBJ(build);
+	BUILD_COBJ(graph);
+	BUILD_COBJ(safealloc);
+
+	D_("build/main",
+		CC(build/main) "main.c build/graph.o build/safealloc.o "
+			"build/build.o",
+		R(main.c), R(include/ekam.h), R(build/graph.o),
+		R(build/safealloc.o), R(build/build.o));
 
 	system("mkdir -p build");
 	BUILD_TARGET(build/main);

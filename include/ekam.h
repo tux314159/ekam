@@ -9,7 +9,8 @@
 
 // GENERAL-PURPOSE MACROS
 
-#define Q(x) #x
+#define Q_(x) #x
+#define Q(x)  Q_(x)
 
 // INIT STUFF
 #define INIT_EKAM()                                                       \
@@ -33,11 +34,11 @@
 
 // (R)esolve a target name.
 #define R_(x) *ht_get_size_t(_main_ht, x)
-#define R(x)  R_(Q(x))
+#define R(x)  R_(#x)
 
 // We require all targets to be forward-declared.
 #define DECLARE_(target) ht_insert_size_t(_main_ht, target, _main_cnt++);
-#define DECLARE(target)  DECLARE_(Q(target))
+#define DECLARE(target)  DECLARE_(#target)
 
 // (D)ependency declaration
 #define D_(filename, cmd, ...)                                \
@@ -51,20 +52,20 @@
 			filename                                          \
 		);                                                    \
 	} while (0)
-#define D(filename, cmd, ...) D_(Q(filename), Q(cmd), __VA_ARGS__)
+#define D(filename, cmd, ...) D_(#filename, #cmd, __VA_ARGS__)
 
 // (D)ependency declaration but no actual deps
 #define D0_(filename, cmd)                                                    \
 	do {                                                                      \
 		graph_add_target(&_main_graph, R_(filename), NULL, 0, cmd, filename); \
 	} while (0)
-#define D0(filename, cmd) D0_(Q(filename), Q(cmd))
+#define D0(filename, cmd) D0_(#filename, #cmd)
 
 #define BUILD_TARGET_(targ)                                           \
 	do {                                                              \
 		cons_partgraph(&_main_graph, &_main_partgraph, R_(targ));     \
 		build_graph(&_main_partgraph, argc == 1 ? 1 : atoi(argv[1])); \
 	} while (0)
-#define BUILD_TARGET(targ) BUILD_TARGET_(Q(targ))
+#define BUILD_TARGET(targ) BUILD_TARGET_(#targ)
 
 #endif
