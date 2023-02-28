@@ -12,7 +12,10 @@
 	DECLARE_("build/" #base ".o");
 
 // clang-format off
-#define CFLAGS -Iinclude -O2
+#define BUILDDIR build
+#define SRCDIR src
+#define HEADERDIR include
+#define CFLAGS -I HEADERDIR -O2
 
 #define CC_(out) "gcc " Q(CFLAGS) " -o " out " "
 #define CC(out) CC_(#out)
@@ -23,10 +26,10 @@
 #define ID_(in) D0_(in, "")
 #define ID(in) ID_(#in)
 
-#define BUILD_COBJ(base)								     \
-	D_("build/" #base ".o",                                  \
-		OCC_("build/" #base ".o") "src/" #base ".c", \
-		R_("src/" #base ".c"), R_("include/" #base ".h"))
+#define BUILD_COBJ(base)                                       \
+	D_(Q(BUILDDIR) "/" #base ".o",                             \
+		OCC_(Q(BUILDDIR) "/" #base ".o") Q(SRCDIR) #base ".c", \
+		R_(Q(SRCDIR) "/" #base ".c"), R_(Q(HEADERDIR) "/" #base ".h"))
 
 #define DECLARE_ID_(in) do { DECLARE_(in); ID_(in); } while (0)
 #define DECLARE_ID(in) DECLARE_ID_(#in)
