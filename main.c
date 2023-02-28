@@ -4,7 +4,7 @@
 
 #include "ekam.h"
 
-#define DECLARE_C(base)              \
+#define DECLARE_COBJ(base)              \
 	DECLARE_("src/" #base ".c");     \
 	DECLARE_("include/" #base ".h"); \
 	ID_("src/" #base ".c");          \
@@ -33,9 +33,9 @@ main(int argc, char **argv)
 {
 	INIT_EKAM();
 
-	DECLARE_C(safealloc);
-	DECLARE_C(graph);
-	DECLARE_C(build);
+	DECLARE_COBJ(safealloc);
+	DECLARE_COBJ(graph);
+	DECLARE_COBJ(build);
 	DECLARE(include/ekam.h);
 	DECLARE(main.c);
 	DECLARE(build/main);
