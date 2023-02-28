@@ -9,5 +9,7 @@ void *
 calloc_s(size_t nmemb, size_t size);
 void *
 realloc_s(void *ptr, size_t size);
+void
+free_s(void *ptr);
 
 #endif

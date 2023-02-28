@@ -1,7 +1,7 @@
 #ifndef INCLUDE_DATASTRUCTS_H
 #define INCLUDE_DATASTRUCTS_H
 
-#include <stdlib.h>
+#include "safealloc.h"
 
 #define MAKE_VEC_T(type) \
 	struct Vec_##type {  \
@@ -10,11 +10,11 @@
 		type  *arr;      \
 	}
 
-#define VEC_INIT(vec)                                \
-	do {                                             \
-		vec.arr     = calloc(1, sizeof(*(vec).arr)); \
-		vec.sz      = 0;                             \
-		vec.real_sz = sizeof(*(vec).arr);            \
+#define VEC_INIT(vec)                                  \
+	do {                                               \
+		vec.arr     = calloc_s(1, sizeof(*(vec).arr)); \
+		vec.sz      = 0;                               \
+		vec.real_sz = sizeof(*(vec).arr);              \
 	} while (0);
 
 #define VEC_KILL(vec) free(vec.arr);

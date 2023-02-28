@@ -24,8 +24,9 @@ main(int argc, char **argv)
 	INIT_EKAM();
 
 	// clang-format off
-	DECLARE_C(graph);
 	DECLARE_C(safealloc);
+	DECLARE_C(graph);
+	DECLARE_C(build);
 	DECLARE(include/ekam.h);
 	DECLARE(main.c);
 	DECLARE(build/main);
@@ -37,12 +38,15 @@ main(int argc, char **argv)
 	D(build/graph.o,
 		OCC(build/graph.o) src/graph.c,
 		R(src/graph.c), R(include/graph.h));
+	D(build/build.o,
+		OCC(build/build.o) src/build.c,
+		R(src/build.c), R(include/build.h));
 	D(build/safealloc.o,
 		OCC(build/safealloc.o) src/safealloc.c,
 		R(src/safealloc.c), R(include/safealloc.h));
 	D(build/main,
-		CC(build/main) main.c build/graph.o build/safealloc.o,
-		R(main.c), R(include/ekam.h), R(build/graph.o), R(build/safealloc.o));
+		CC(build/main) main.c build/graph.o build/safealloc.o build/build.o,
+		R(main.c), R(include/ekam.h), R(build/graph.o), R(build/safealloc.o), R(build/build.o));
 	// clang-format on
 
 	system("mkdir -p build");

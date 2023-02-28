@@ -1,6 +1,7 @@
 #ifndef INCLUDE_EKAM
 #define INCLUDE_EKAM
 
+#include "build.h"
 #include "graph.h"
 #include "hashtable.h"
 
@@ -59,10 +60,10 @@
 	} while (0)
 #define D0(filename, cmd) D0_(Q(filename), Q(cmd))
 
-#define BUILD_TARGET_(targ)                                              \
-	do {                                                                \
-		graph_buildpartial(&_main_graph, &_main_partgraph, R_(targ));    \
-		graph_execute(&_main_partgraph, argc == 1 ? 1 : atoi(argv[1])); \
+#define BUILD_TARGET_(targ)                                           \
+	do {                                                              \
+		cons_partgraph(&_main_graph, &_main_partgraph, R_(targ));     \
+		build_graph(&_main_partgraph, argc == 1 ? 1 : atoi(argv[1])); \
 	} while (0)
 #define BUILD_TARGET(targ) BUILD_TARGET_(Q(targ))
 

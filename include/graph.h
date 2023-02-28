@@ -4,10 +4,12 @@
 #include <stdbool.h>
 #include <sys/types.h>
 
+#include "vector.h"
+
 // absolute maximum number of nodes
 #define MAX_NODES 100000
 // max size of map in each adjlist; larger sizes will
-// make it faster but take more memory.
+// make it faster but take more memory
 #define ADJLIST_MAP_SZ 65536
 
 struct Node {
@@ -68,21 +70,44 @@ graph_add_target(
 );
 
 /*
- * Build the partial graph containg all nodes in need of updating
- * starting from some starting points. Prunes nodes based on update
- * time comparisons.
+ * Copy a graph src into dest, possibly inverting the edges.
  */
 void
-graph_buildpartial(
-	struct Graph *src,
-	struct Graph *dest,
-	size_t        start
-);
+graph_copy(struct Graph *src, struct Graph *dest, size_t start, bool invert);
 
 /*
- * Execute a graph, possibly in parallel.
+ * Topologically sort a graph.
  */
 void
-graph_execute(struct Graph *g, int max_childs);
+toposort(struct Graph *g, size_t c, struct Vec_size_t *tsorted, char *visited);
+
+// We're doing BFS everywhere - why not macro?
+#define BFS_BEGIN(                                                \
+	_BFS_BEGIN_Q,                                                 \
+	_BFS_BEGIN_QSZ,                                               \
+	_BFS_BEGIN_H,                                                 \
+	_BFS_BEGIN_T,                                                 \
+	_BFS_BEGIN_VIS,                                               \
+	_BFS_BEGIN_START                                              \
+)                                                                 \
+	size_t _BFS_BEGIN_Q[_BFS_BEGIN_QSZ];                          \
+	size_t _BFS_BEGIN_H = 0, _BFS_BEGIN_T = 1;                    \
+	_BFS_BEGIN_Q[0] = _BFS_BEGIN_START;                           \
+	char _BFS_BEGIN_VIS[_BFS_BEGIN_QSZ];                          \
+	memset(_BFS_BEGIN_VIS, false, sizeof(bool) * _BFS_BEGIN_QSZ); \
+	_BFS_BEGIN_VIS[_BFS_BEGIN_START] = true;
+
+#define QUEUE_POP(_QUEUE_POP_Q, _QUEUE_POP_H, _QUEUE_POP_QSZ) \
+	_QUEUE_POP_Q[_QUEUE_POP_H];                               \
+	_QUEUE_POP_H += _QUEUE_POP_H < _QUEUE_POP_QSZ;
+
+#define QUEUE_PUSH(                                  \
+	_QUEUE_PUSH_Q,                                   \
+	_QUEUE_PUSH_T,                                   \
+	_QUEUE_PUSH_QSZ,                                 \
+	_QUEUE_PUSH_ELEM                                 \
+)                                                    \
+	_QUEUE_PUSH_Q[_QUEUE_PUSH_T] = _QUEUE_PUSH_ELEM; \
+	_QUEUE_PUSH_T += _QUEUE_PUSH_T < _QUEUE_PUSH_QSZ;
 
 #endif

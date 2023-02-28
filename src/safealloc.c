@@ -32,3 +32,9 @@ realloc_s(void *ptr, size_t size)
 	}
 	return m;
 }
+
+void
+free_s(void *ptr)
+{
+	free(ptr); // convenient reexport
+}
