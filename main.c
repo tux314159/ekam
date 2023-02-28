@@ -4,7 +4,7 @@
 
 #include "ekam.h"
 
-#define DECLARE_COBJ(base)              \
+#define DECLARE_COBJ(base)           \
 	DECLARE_("src/" #base ".c");     \
 	DECLARE_("include/" #base ".h"); \
 	ID_("src/" #base ".c");          \
@@ -28,6 +28,9 @@
 		OCC_("build/" #base ".o") "src/" #base ".c", \
 		R_("src/" #base ".c"), R_("include/" #base ".h"))
 
+#define DECLARE_ID_(in) do { DECLARE_(in); ID_(in); } while (0)
+#define DECLARE_ID(in) DECLARE_ID_(#in)
+
 int
 main(int argc, char **argv)
 {
@@ -36,13 +39,10 @@ main(int argc, char **argv)
 	DECLARE_COBJ(safealloc);
 	DECLARE_COBJ(graph);
 	DECLARE_COBJ(build);
-	DECLARE(include/ekam.h);
-	DECLARE(main.c);
+	DECLARE_ID(include/ekam.h);
+	DECLARE_ID(main.c);
 	DECLARE(build/main);
 	DECLARE(build);
-
-	ID(include/ekam.h);
-	ID(main.c);
 
 	BUILD_COBJ(build);
 	BUILD_COBJ(graph);
