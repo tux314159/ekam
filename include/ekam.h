@@ -30,11 +30,11 @@
 #define DECLARE(target) ht_insert_size_t(_main_ht, target, _main_cnt++);
 
 // (D)ependency declaration
-#define D(filename, cmd, ...)                                \
+#define D(filename, cmd, ...)                                 \
 	do {                                                      \
 		graph_add_target(                                     \
 			&_main_graph,                                     \
-			R(filename),                                     \
+			R(filename),                                      \
 			(size_t[]){__VA_ARGS__},                          \
 			sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
 			cmd,                                              \
@@ -44,13 +44,13 @@
 
 // (D)ependency declaration but no actual deps
 #define D0(filename, cmd)                                                    \
-	do {                                                                      \
+	do {                                                                     \
 		graph_add_target(&_main_graph, R(filename), NULL, 0, cmd, filename); \
 	} while (0)
 
-#define BUILD_TARGET(targ)                                           \
+#define BUILD_TARGET(targ)                                            \
 	do {                                                              \
-		cons_partgraph(&_main_graph, &_main_partgraph, R(targ));     \
+		cons_partgraph(&_main_graph, &_main_partgraph, R(targ));      \
 		build_graph(&_main_partgraph, argc == 1 ? 1 : atoi(argv[1])); \
 	} while (0)
 
