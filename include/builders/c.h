@@ -23,6 +23,8 @@
 
 // A "C object" consists of a source file and a header file, which
 // produce an object file. All three should have the same basename.
+// The source, header, and object files should reside in SRCDIR,
+// HEADERDIR, and BUILDDIR respectively.
 
 #define DECLARE_COBJ(base)         \
 	DECLARE("src/" base ".c");     \

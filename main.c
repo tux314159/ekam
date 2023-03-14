@@ -25,7 +25,6 @@ main(int argc, char **argv)
 	DECLARE_ID("include/ekam.h");
 	DECLARE_ID("main.c");
 	DECLARE("build/main");
-	DECLARE("build");
 
 	BUILD_COBJ("build");
 	BUILD_COBJ("graph");
