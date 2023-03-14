@@ -26,9 +26,9 @@
 #define ID_(in) D0_(in, "")
 #define ID(in) ID_(#in)
 
-#define BUILD_COBJ(base)                                       \
-	D_(Q(BUILDDIR) "/" #base ".o",                             \
-		OCC_(Q(BUILDDIR) "/" #base ".o") Q(SRCDIR) #base ".c", \
+#define BUILD_COBJ(base)                                           \
+	D_(Q(BUILDDIR) "/" #base ".o",                                 \
+		OCC_(Q(BUILDDIR) "/" #base ".o") Q(SRCDIR) "/" #base ".c", \
 		R_(Q(SRCDIR) "/" #base ".c"), R_(Q(HEADERDIR) "/" #base ".h"))
 
 #define DECLARE_ID_(in) do { DECLARE_(in); ID_(in); } while (0)
