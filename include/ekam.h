@@ -7,11 +7,6 @@
 
 // All the macros for our DSL.
 
-// GENERAL-PURPOSE MACROS
-
-#define Q_(x) #x
-#define Q(x)  Q_(x)
-
 // INIT STUFF
 #define INIT_EKAM()                                                       \
 	struct Graph      _main_graph     = graph_make();                     \
@@ -28,44 +23,35 @@
 
 // GRAPH CONVENIENCE MACROS
 
-// Most macros here that deal with target names will have two
-// versions: quoted and unquoted. Quoted versions simply quote
-// all applicable arguments and pass them to the unquoted version.
-
 // (R)esolve a target name.
-#define R_(x) *ht_get_size_t(_main_ht, x)
-#define R(x)  R_(#x)
+#define R(x) *ht_get_size_t(_main_ht, x)
 
 // We require all targets to be forward-declared.
-#define DECLARE_(target) ht_insert_size_t(_main_ht, target, _main_cnt++);
-#define DECLARE(target)  DECLARE_(#target)
+#define DECLARE(target) ht_insert_size_t(_main_ht, target, _main_cnt++);
 
 // (D)ependency declaration
-#define D_(filename, cmd, ...)                                \
+#define D(filename, cmd, ...)                                \
 	do {                                                      \
 		graph_add_target(                                     \
 			&_main_graph,                                     \
-			R_(filename),                                     \
+			R(filename),                                     \
 			(size_t[]){__VA_ARGS__},                          \
 			sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
 			cmd,                                              \
 			filename                                          \
 		);                                                    \
 	} while (0)
-#define D(filename, cmd, ...) D_(#filename, #cmd, __VA_ARGS__)
 
 // (D)ependency declaration but no actual deps
-#define D0_(filename, cmd)                                                    \
+#define D0(filename, cmd)                                                    \
 	do {                                                                      \
-		graph_add_target(&_main_graph, R_(filename), NULL, 0, cmd, filename); \
+		graph_add_target(&_main_graph, R(filename), NULL, 0, cmd, filename); \
 	} while (0)
-#define D0(filename, cmd) D0_(#filename, #cmd)
 
-#define BUILD_TARGET_(targ)                                           \
+#define BUILD_TARGET(targ)                                           \
 	do {                                                              \
-		cons_partgraph(&_main_graph, &_main_partgraph, R_(targ));     \
+		cons_partgraph(&_main_graph, &_main_partgraph, R(targ));     \
 		build_graph(&_main_partgraph, argc == 1 ? 1 : atoi(argv[1])); \
 	} while (0)
-#define BUILD_TARGET(targ) BUILD_TARGET_(#targ)
 
 #endif
