@@ -20,19 +20,30 @@ adddeps_resolve(
 
 	size_t *deps = malloc_s(n_deps * sizeof(*deps));
 	for (size_t i = 0; i < n_deps; i++) {
-		// TODO error reporting
 		char *dep = va_arg(deps_va, char *);
-		deps[i] = *ht_get_size_t(ht, dep);
+		size_t *depptr = ht_get_size_t(ht, dep);
+		if (depptr) {
+			deps[i] = *depptr;
+		} else {
+			fprintf(stderr, "FATAL: %s: no such target!\n", dep);
+			exit(1);
+		}
 	}
 
-	graph_add_target(
-		graph,
-		*ht_get_size_t(ht, filename), // TODO error reporting
-		deps,
-		n_deps,
-		cmd,
-		filename
-	);
+	size_t *targptr = ht_get_size_t(ht, filename);
+	if (targptr) {
+		graph_add_target(
+			graph,
+			*targptr,
+			deps,
+			n_deps,
+			cmd,
+			filename
+		);
+	} else {
+		fprintf(stderr, "FATAL: %s: no such target!\n", filename);
+		exit(1);
+	}
 
 	free_s(deps);
 	va_end(deps_va);
