@@ -37,7 +37,7 @@
 		filename,                                               \
 		cmd,                                                    \
 		sizeof((const char *[]){__VA_ARGS__}) / sizeof(size_t), \
-		__VA_ARGS__                           \
+		__VA_ARGS__                                             \
 	)
 
 // (D)ependency declaration but no actual deps
