@@ -20,6 +20,7 @@
 -Wswitch
 -Wundef
 -Wunreachable-code
+-Wno-unused-function
 -Wwrite-strings
 -Werror
 -Iinclude/

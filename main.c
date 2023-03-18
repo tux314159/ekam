@@ -22,19 +22,19 @@ main(int argc, char **argv)
 	DECLARE_COBJ("safealloc");
 	DECLARE_COBJ("graph");
 	DECLARE_COBJ("build");
-	DECLARE_ID("include/ekam.h");
+	DECLARE_COBJ("ekam");
 	DECLARE_ID("main.c");
 	DECLARE("build/main");
 
+	BUILD_COBJ("safealloc");
 	BUILD_COBJ("build");
 	BUILD_COBJ("graph");
-	BUILD_COBJ("safealloc");
+	BUILD_COBJ("ekam");
 
 	D("build/main",
-		BUILD_C("build/main") "main.c build/graph.o build/safealloc.o "
-			"build/build.o",
-		R("main.c"), R("include/ekam.h"), R("build/graph.o"),
-		R("build/safealloc.o"), R("build/build.o"));
+		BUILD_C("build/main") "main.c build/graph.o build/safealloc.o build/build.o build/ekam.o",
+		"main.c", "include/ekam.h", "build/graph.o",
+		"build/safealloc.o", "build/build.o", "build/ekam.o");
 
 	system("mkdir -p build");
 	BUILD_TARGET("build/main");

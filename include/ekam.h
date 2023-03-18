@@ -30,17 +30,15 @@
 #define DECLARE(target) ht_insert_size_t(_main_ht, target, _main_cnt++);
 
 // (D)ependency declaration
-#define D(filename, cmd, ...)                                 \
-	do {                                                      \
-		graph_add_target(                                     \
-			&_main_graph,                                     \
-			R(filename),                                      \
-			(size_t[]){__VA_ARGS__},                          \
-			sizeof((size_t[]){__VA_ARGS__}) / sizeof(size_t), \
-			cmd,                                              \
-			filename                                          \
-		);                                                    \
-	} while (0)
+#define D(filename, cmd, ...)                                   \
+	adddeps_resolve(                                            \
+		&_main_graph,                                           \
+		_main_ht,                                               \
+		filename,                                               \
+		cmd,                                                    \
+		sizeof((const char *[]){__VA_ARGS__}) / sizeof(size_t), \
+		__VA_ARGS__                           \
+	)
 
 // (D)ependency declaration but no actual deps
 #define D0(filename, cmd)                                                    \
@@ -53,5 +51,18 @@
 		cons_partgraph(&_main_graph, &_main_partgraph, R(targ));      \
 		build_graph(&_main_partgraph, argc == 1 ? 1 : atoi(argv[1])); \
 	} while (0)
+
+/*
+ * A couple functions
+ */
+void
+adddeps_resolve(
+	struct Graph     *graph,
+	Hashtable_size_t *ht,
+	const char       *filename,
+	const char       *cmd,
+	size_t            n_deps,
+	...
+);
 
 #endif

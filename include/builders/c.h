@@ -36,6 +36,6 @@
 #define BUILD_COBJ(base)                                           \
 	D(BUILDDIR "/" base ".o",                                      \
 		BUILD_C_O(BUILDDIR "/" base ".o") SRCDIR "/" base ".c",    \
-		R(SRCDIR "/" base ".c"), R(HEADERDIR "/" base ".h"))
+		SRCDIR "/" base ".c", HEADERDIR "/" base ".h")
 
 #endif
