@@ -33,8 +33,7 @@ main(int argc, char **argv)
 
 	D("build/main",
 		BUILD_C("build/main") "main.c build/graph.o build/safealloc.o build/build.o build/ekam.o",
-		"main.c", "include/ekam.h", "build/graph.o",
-		"build/safealloc.o", "build/build.o", "build/ekam.o");
+		"main.c", DEP_COBJ("graph"), DEP_COBJ("safealloc"), DEP_COBJ("build"), DEP_COBJ("ekam"));
 
 	system("mkdir -p build");
 	BUILD_TARGET("build/main");
