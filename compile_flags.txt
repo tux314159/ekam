@@ -22,7 +22,6 @@
 -Wunreachable-code
 -Wno-unused-function
 -Wwrite-strings
--Werror
 -Iinclude/
 -Iinclude/util/
 -D_POSIX_C_SOURCE=200809L
