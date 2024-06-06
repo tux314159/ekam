@@ -39,7 +39,7 @@ void
 graph_delete(struct Graph *g);
 
 /*
- * Add a unidirectional edge between two nodes, creating them if necessary
+ * Add a unidirectional edge between two nodes, creating them if necessary.
  */
 void
 graph_add_edge(struct Graph *g, size_t from, size_t to);
@@ -57,7 +57,7 @@ graph_add_meta(
 );
 
 /*
- * Wrapper around graph_add_meta and graph_add_edge
+ * Wrapper around graph_add_meta and graph_add_edge.
  */
 void
 graph_add_target(
