@@ -18,6 +18,7 @@ main(int argc, char **argv)
 	INIT_EKAM();
 
 	DECLARE_COBJ("safealloc");
+	DECLARE_COBJ("table");
 	DECLARE_COBJ("graph");
 	DECLARE_COBJ("build");
 	DECLARE_COBJ("ekam");
@@ -25,13 +26,14 @@ main(int argc, char **argv)
 	DECLARE("build/main");
 
 	BUILD_COBJ("safealloc");
+	BUILD_COBJ("table");
 	BUILD_COBJ("build");
 	BUILD_COBJ("graph");
 	BUILD_COBJ("ekam");
 
 	D("build/main",
-		BUILD_C("build/main") "main.c build/graph.o build/safealloc.o build/build.o build/ekam.o",
-		"main.c", DEP_COBJ("graph"), DEP_COBJ("safealloc"), DEP_COBJ("build"), DEP_COBJ("ekam"));
+		BUILD_C("build/main") "main.c build/graph.o build/safealloc.o build/table.o build/build.o build/ekam.o",
+		"main.c", DEP_COBJ("graph"), DEP_COBJ("safealloc"), DEP_COBJ("table"), DEP_COBJ("build"), DEP_COBJ("ekam"));
 
 	system("mkdir -p build");
 	BUILD_TARGET("build/main");
