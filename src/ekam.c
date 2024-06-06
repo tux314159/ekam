@@ -4,7 +4,6 @@
 #include "safealloc.h"
 #include "util/debug.h"
 #include <stdarg.h>
-#include <stdio.h>
 
 void
 adddeps_resolve(
