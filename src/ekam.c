@@ -8,11 +8,11 @@
 
 void
 adddeps_resolve(
-	struct Graph     *graph,
+	struct Graph *graph,
 	Hashtable_size_t *ht,
-	const char       *filename,
-	const char       *cmd,
-	size_t            n_deps,
+	const char *filename,
+	const char *cmd,
+	size_t n_deps,
 	...
 )
 {
@@ -21,7 +21,7 @@ adddeps_resolve(
 
 	size_t *deps = malloc_s(n_deps * sizeof(*deps));
 	for (size_t i = 0; i < n_deps; i++) {
-		char   *dep    = va_arg(deps_va, char *);
+		char *dep = va_arg(deps_va, char *);
 		size_t *depptr = ht_get_size_t(ht, dep);
 		if (depptr) {
 			deps[i] = *depptr;

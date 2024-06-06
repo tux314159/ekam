@@ -8,11 +8,11 @@
 // All the macros for our DSL.
 
 // INIT STUFF
-#define INIT_EKAM()                                                       \
-	struct Graph      _main_graph     = graph_make();                     \
-	struct Graph      _main_partgraph = graph_make();                     \
-	Hashtable_size_t *_main_ht        = ht_create_size_t(ADJLIST_MAP_SZ); \
-	size_t            _main_cnt       = 1;
+#define INIT_EKAM()                                                \
+	struct Graph _main_graph = graph_make();                       \
+	struct Graph _main_partgraph = graph_make();                   \
+	Hashtable_size_t *_main_ht = ht_create_size_t(ADJLIST_MAP_SZ); \
+	size_t _main_cnt = 1;
 
 #define FREE_EKAM()                     \
 	do {                                \
@@ -57,11 +57,11 @@
  */
 void
 adddeps_resolve(
-	struct Graph     *graph,
+	struct Graph *graph,
 	Hashtable_size_t *ht,
-	const char       *filename,
-	const char       *cmd,
-	size_t            n_deps,
+	const char *filename,
+	const char *cmd,
+	size_t n_deps,
 	...
 );
 

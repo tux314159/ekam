@@ -27,12 +27,12 @@ cons_partgraph(struct Graph *src, struct Graph *dest, size_t start)
 	{
 		BFS_BEGIN(queue, MAX_NODES, h, t, visited, start);
 		while (h != t) {
-			size_t      c     = QUEUE_POP(queue, h, MAX_NODES);
+			size_t c = QUEUE_POP(queue, h, MAX_NODES);
 			struct Node c_nde = src->nodes[c];
 
 			// Read mtime
 			struct stat csb;
-			int         csr = stat(c_nde.filename, &csb);
+			int csr = stat(c_nde.filename, &csb);
 
 			// If we do not exist, we definitely need some updating.
 			if (csr == -1) {
@@ -47,7 +47,7 @@ cons_partgraph(struct Graph *src, struct Graph *dest, size_t start)
 				// We want every pair, so we do this before visited check;
 				// at most we get one duplicate (I think) (I hope)
 				struct stat nsb;
-				int         nsr = stat(src->nodes[*n].filename, &nsb);
+				int nsr = stat(src->nodes[*n].filename, &nsb);
 
 				// We need to be updated if our direct dependency needs it.
 				// If it does not exist, it will exist, and therefore we will
@@ -84,7 +84,7 @@ cons_partgraph(struct Graph *src, struct Graph *dest, size_t start)
 		t = needupd.sz;
 
 		while (h != t) {
-			size_t      c     = QUEUE_POP(queue, h, MAX_NODES);
+			size_t c = QUEUE_POP(queue, h, MAX_NODES);
 			struct Node c_nde = inv.nodes[c];
 			// Copy metadata over
 			graph_add_meta(dest, c, src->nodes[c].cmd, src->nodes[c].filename);
@@ -124,8 +124,8 @@ build_graph(struct Graph *g, int max_childs)
 
 	// Reverse toposorted array - since graph is reversed.
 	for (size_t i = 0; i < g->n_nodes / 2; i++) {
-		size_t tmp                  = tsorted[i];
-		tsorted[i]                  = tsorted[g->n_nodes - i - 1];
+		size_t tmp = tsorted[i];
+		tsorted[i] = tsorted[g->n_nodes - i - 1];
 		tsorted[g->n_nodes - i - 1] = tmp;
 	}
 
@@ -133,15 +133,15 @@ build_graph(struct Graph *g, int max_childs)
 
 	// Set up shm
 	const size_t shm_sz = sizeof(sem_t) + sizeof(int) + sizeof(int) * MAX_NODES;
-	int          zero_fd = open("/dev/zero", O_RDWR);
-	void        *mem =
+	int zero_fd = open("/dev/zero", O_RDWR);
+	void *mem =
 		mmap(NULL, shm_sz, PROT_READ | PROT_WRITE, MAP_SHARED, zero_fd, 0);
 
 	sem_t *plock = mem;
 	sem_init(plock, 1, (unsigned)max_childs);
 
 	int *n_childs = (int *)((sem_t *)mem + 1);
-	*n_childs     = 0;
+	*n_childs = 0;
 
 	int *processed = (int *)((sem_t *)mem + 1) + 1;
 	memset(processed, 0, sizeof(int) * MAX_NODES);

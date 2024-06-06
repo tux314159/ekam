@@ -7,14 +7,14 @@
 	struct Vec_##type {  \
 		size_t sz;       \
 		size_t real_sz;  \
-		type  *arr;      \
+		type *arr;       \
 	}
 
-#define VEC_INIT(vec)                                  \
-	do {                                               \
-		vec.arr     = calloc_s(1, sizeof(*(vec).arr)); \
-		vec.sz      = 0;                               \
-		vec.real_sz = sizeof(*(vec).arr);              \
+#define VEC_INIT(vec)                              \
+	do {                                           \
+		vec.arr = calloc_s(1, sizeof(*(vec).arr)); \
+		vec.sz = 0;                                \
+		vec.real_sz = sizeof(*(vec).arr);          \
 	} while (0);
 
 #define VEC_KILL(vec) free(vec.arr);

@@ -33,12 +33,12 @@
 	ID("include/" base ".h");      \
 	DECLARE("build/" base ".o");
 
-#define DEP_COBJ(base) \
-    HEADERDIR "/" base ".h", BUILDDIR "/" base ".o"
+#define DEP_COBJ(base) HEADERDIR "/" base ".h", BUILDDIR "/" base ".o"
 
-#define BUILD_COBJ(base)                                           \
-	D(BUILDDIR "/" base ".o",                                      \
-		BUILD_C_O(BUILDDIR "/" base ".o") SRCDIR "/" base ".c",    \
-		SRCDIR "/" base ".c", HEADERDIR "/" base ".h")
+#define BUILD_COBJ(base)                                      \
+	D(BUILDDIR "/" base ".o",                                 \
+	  BUILD_C_O(BUILDDIR "/" base ".o") SRCDIR "/" base ".c", \
+	  SRCDIR "/" base ".c",                                   \
+	  HEADERDIR "/" base ".h")
 
 #endif

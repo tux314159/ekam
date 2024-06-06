@@ -16,6 +16,10 @@
 // This one does nothing.
 #define ID(in) D0(in, "")
 
-#define DECLARE_ID(in) do { DECLARE(in); ID(in); } while (0)
+#define DECLARE_ID(in) \
+	do {               \
+		DECLARE(in);   \
+		ID(in);        \
+	} while (0)
 
 #endif

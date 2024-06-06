@@ -14,16 +14,16 @@
 
 struct Node {
 	size_t *adj;
-	size_t  len;
-    bool    exists;
-	char   *cmd;
-	char   *filename; // TODO generalise
+	size_t len;
+	bool exists;
+	char *cmd;
+	char *filename; // TODO generalise
 };
 
 // WARNING: 0 is reserved
 struct Graph {
 	struct Node *nodes;
-	size_t       n_nodes;
+	size_t n_nodes;
 };
 
 /*
@@ -51,9 +51,9 @@ graph_add_edge(struct Graph *g, size_t from, size_t to);
 void
 graph_add_meta(
 	struct Graph *g,
-	size_t        at,
-	const char   *cmd,
-	const char   *filename
+	size_t at,
+	const char *cmd,
+	const char *filename
 );
 
 /*
@@ -62,11 +62,11 @@ graph_add_meta(
 void
 graph_add_target(
 	struct Graph *g,
-	size_t        target,
-	size_t       *deps,
-	size_t        n_deps,
-	const char   *cmd,
-	const char   *filename
+	size_t target,
+	size_t *deps,
+	size_t n_deps,
+	const char *cmd,
+	const char *filename
 );
 
 /*

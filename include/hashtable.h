@@ -20,7 +20,7 @@ ht_hash(const char *str)
 {
 	// djb2 hash algorithm
 	unsigned long hash = 5381;
-	char          c;
+	char c;
 
 	while ((c = *str++)) {
 		hash = ((hash << 5) + hash) + (unsigned char)c;
@@ -32,8 +32,8 @@ ht_hash(const char *str)
 #define MAKE_HT_T(T)                                                         \
 	typedef struct HT_entry_##T {                                            \
 		struct HT_entry_##T *next;                                           \
-		char                *key;                                            \
-		T                    data;                                           \
+		char *key;                                                           \
+		T data;                                                              \
 		struct HT_entry_##T *iter_next;                                      \
 	} HT_entry_##T;                                                          \
                                                                              \
@@ -42,26 +42,26 @@ ht_hash(const char *str)
 		 * in the first bucket. To optimise for this case we will store all  \
 		 * first elements in sequential memory. */                           \
 		struct HT_entry_##T *entries;                                        \
-		size_t               size;                                           \
-		size_t               n_buckets;                                      \
+		size_t size;                                                         \
+		size_t n_buckets;                                                    \
 		struct HT_entry_##T *iter_begin;                                     \
 		struct HT_entry_##T *iter_end;                                       \
-		struct HT_entry_##T  iter_dummy;                                     \
+		struct HT_entry_##T iter_dummy;                                      \
 	} Hashtable_##T;                                                         \
                                                                              \
 	static Hashtable_##T *ht_create_##T(size_t size);                        \
-	static void           ht_destroy_##T(Hashtable_##T *ht);                 \
+	static void ht_destroy_##T(Hashtable_##T *ht);                           \
 	static void ht_insert_##T(Hashtable_##T *ht, const char *key, T data);   \
-	static T   *ht_get_##T(Hashtable_##T *ht, const char *key);              \
+	static T *ht_get_##T(Hashtable_##T *ht, const char *key);                \
                                                                              \
 	static Hashtable_##T *ht_create_##T(size_t size)                         \
 	{                                                                        \
 		Hashtable_##T *ht = malloc_s(sizeof(*ht));                           \
-		ht->entries       = calloc_s(size, sizeof(*(ht->entries)));          \
-		ht->size          = 0;                                               \
-		ht->n_buckets     = size;                                            \
-		ht->iter_begin    = NULL;                                            \
-		ht->iter_end      = NULL;                                            \
+		ht->entries = calloc_s(size, sizeof(*(ht->entries)));                \
+		ht->size = 0;                                                        \
+		ht->n_buckets = size;                                                \
+		ht->iter_begin = NULL;                                               \
+		ht->iter_end = NULL;                                                 \
 		ht->iter_dummy =                                                     \
 			(HT_entry_##T){.next = NULL, .key = NULL, .iter_next = NULL};    \
 		return ht;                                                           \
@@ -74,7 +74,7 @@ ht_hash(const char *str)
 			if (!p->next) {                                                  \
 				continue;                                                    \
 			}                                                                \
-			HT_entry_##T *pp   = p->next;                                    \
+			HT_entry_##T *pp = p->next;                                      \
 			HT_entry_##T *prev = pp;                                         \
 			while ((pp = pp->next)) {                                        \
 				free(prev);                                                  \
@@ -88,14 +88,14 @@ ht_hash(const char *str)
 	{                                                                        \
 		unsigned long hash = ht_hash(key) % ht->n_buckets;                   \
 		HT_entry_##T *nent = calloc_s(1, sizeof(*nent));                     \
-		HT_entry_##T *p    = ht->entries + hash;                             \
+		HT_entry_##T *p = ht->entries + hash;                                \
 		while (p->next) {                                                    \
 			p = p->next;                                                     \
 		}                                                                    \
 		p->next = nent;                                                      \
-		p->key  = malloc_s(sizeof(*key) * (strlen(key) + 1));                \
+		p->key = malloc_s(sizeof(*key) * (strlen(key) + 1));                 \
 		strcpy(p->key, key);                                                 \
-		p->data      = data;                                                 \
+		p->data = data;                                                      \
 		p->iter_next = &ht->iter_dummy;                                      \
 		if (ht->iter_begin) {                                                \
 			ht->iter_end->iter_next = p;                                     \
@@ -109,7 +109,7 @@ ht_hash(const char *str)
 	static T *ht_get_##T(Hashtable_##T *ht, const char *key)                 \
 	{                                                                        \
 		unsigned long hash = ht_hash(key) % ht->n_buckets;                   \
-		HT_entry_##T *p    = ht->entries + hash;                             \
+		HT_entry_##T *p = ht->entries + hash;                                \
 		while (p->next) {                                                    \
 			if (!strcmp(p->key, key)) {                                      \
 				return &p->data;                                             \

@@ -4,13 +4,13 @@ ColumnLimit:     80
 ForEachMacros:   []
 
 AlignAfterOpenBracket:          BlockIndent
-AlignConsecutiveMacros:         Consecutive
-AlignConsecutiveAssignments:    Consecutive
-AlignConsecutiveBitFields:      Consecutive
-AlignConsecutiveDeclarations:   Consecutive
+AlignConsecutiveMacros:         None
+AlignConsecutiveAssignments:    None
+AlignConsecutiveBitFields:      None
+AlignConsecutiveDeclarations:   None
 AlignEscapedNewlines:           Left
 AlignOperands:                  Align
-AlignTrailingComments:          true
+AlignTrailingComments:          false
 
 AllowAllArgumentsOnNextLine:                false
 AllowAllParametersOfDeclarationOnNextLine:  false

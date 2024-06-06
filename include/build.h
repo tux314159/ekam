@@ -9,11 +9,7 @@
  * time comparisons.
  */
 void
-cons_partgraph(
-	struct Graph *src,
-	struct Graph *dest,
-	size_t        start
-);
+cons_partgraph(struct Graph *src, struct Graph *dest, size_t start);
 
 /*
  * Execute the build described by a graph, possibly in parallel.

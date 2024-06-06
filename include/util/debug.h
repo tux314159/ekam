@@ -52,7 +52,7 @@
 
 #else
 
-#define debugpf(...)          ;
+#define debugpf(...) ;
 #define dbgidntpf(level, ...) ;
 
 #endif

@@ -8,7 +8,7 @@ struct Graph
 graph_make(void)
 {
 	return (struct Graph){
-		.nodes   = calloc_s(MAX_NODES, sizeof(struct Node)),
+		.nodes = calloc_s(MAX_NODES, sizeof(struct Node)),
 		.n_nodes = 0,
 	};
 }
@@ -55,16 +55,16 @@ graph_add_edge(struct Graph *g, size_t from, size_t to)
 	g->n_nodes += !g->nodes[to].exists;
 	adjlist_add(afrom, to);
 	g->nodes[from].exists = 1;
-	g->nodes[to].exists   = 1;
+	g->nodes[to].exists = 1;
 	return;
 }
 
 void
 graph_add_meta(
 	struct Graph *g,
-	size_t        at,
-	const char   *cmd,
-	const char   *filename
+	size_t at,
+	const char *cmd,
+	const char *filename
 )
 {
 	struct Node *afrom = g->nodes + at;
@@ -79,11 +79,11 @@ graph_add_meta(
 void
 graph_add_target(
 	struct Graph *g,
-	size_t        target,
-	size_t       *deps,
-	size_t        n_deps,
-	const char   *cmd,
-	const char   *filename
+	size_t target,
+	size_t *deps,
+	size_t n_deps,
+	const char *cmd,
+	const char *filename
 )
 {
 	graph_add_meta(g, target, cmd, filename);
